@@ -5,11 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-<<<<<<< HEAD
-     "dev": "nodemon src/app.js"
-=======
     "dev": "nodemon src/app.js"
->>>>>>> ce79a47b857d2f6b83cce4591b0a11d64581a0e5
   },
   "repository": {
     "type": "git",
