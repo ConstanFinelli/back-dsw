@@ -3,11 +3,11 @@ import express from 'express';
 const app = express();
 app.use(express.json())
 
-app.listen('3000', () =>{console.log("Server running on port 3000")})
 
 let coupons = [
     {id: 1, discount: 0.20, expiringDate: new Date(), status: 'Active' },
 ]
+let Localidades =[];
 
 app.get('/api/getCoupons', (req, res)=>{
     res.json(coupons)
@@ -36,9 +36,6 @@ app.patch('/api/updateCoupon/:id', (req, res) =>{
     res.status(201).send({message:"Coupon updated succesfully", data:coupons[couponIdx]})
     }
 })
-
-let Localidades =[];
-
 
 // mostrar todas las localidades
 
