@@ -1,8 +1,6 @@
 import express from 'express';
-<<<<<<< HEAD
 
 const app = express();
-
 app.use(express.json())
 
 app.listen('3000', () =>{console.log("Server running on port 3000")})
@@ -38,15 +36,6 @@ app.patch('/api/updateCoupon/:id', (req, res) =>{
     res.status(201).send({message:"Coupon updated succesfully", data:coupons[couponIdx]})
     }
 })
-
-=======
-import bodyParser from 'body-parser';
-import { parse } from 'path';
-
-
-// Se creo la instancia de express donde se crean los endpoints
-const app = express();
-
 
 let Localidades =[];
 
@@ -106,4 +95,4 @@ app.patch('/api/updateLocation/:id', express.json(), (req, res) => {
 app.listen(3000, () => {
     console.log('Server is running on port 3000');
 });
->>>>>>> ce79a47b857d2f6b83cce4591b0a11d64581a0e5
+
