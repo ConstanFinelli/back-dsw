@@ -19,7 +19,8 @@
   },
   "homepage": "https://github.com/ConstanFinelli/back-dsw#readme",
   "dependencies": {
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "express-validator": "^7.2.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
