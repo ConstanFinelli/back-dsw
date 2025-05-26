@@ -4,11 +4,10 @@ import userRouter from './coupon.route.js';
 const app = express();
 app.use(express.json())
 
+class Localidad{
+}
 
-export let coupons = [
-    {id: 1, discount: 0.20, expiringDate: new Date(), status: 'Active' },
-]
-let Localidades =[];
+const Localidades = [new Localidad()];
 
 app.use('/api/coupons', userRouter);
 

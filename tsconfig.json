@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "incremental": true,
+    "target": "es2020",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "alwaysStrict": true,
+    "skipLibCheck": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true
+  },
+  "include": ["src/**/*", "**/*.ts", "old/coupon.controller.js", "old/app.js", "old/coupon.route.js", "old/coupon.repository.js"],
+  "exclude": ["node_modules"]
+}
