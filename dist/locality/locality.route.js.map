@@ -1,1 +1,1 @@
-{"version":3,"file":"locality.route.js","sourceRoot":"","sources":["../../src/locality/locality.route.ts"],"names":[],"mappings":""}
+{"version":3,"file":"locality.route.js","sourceRoot":"","sources":["../../src/locality/locality.route.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,MAAM,EAAE,MAAM,SAAS,CAAC;AACjC,OAAO,EAAE,GAAG,EAAE,OAAO,EAAE,MAAM,0BAA0B,CAAC;AAExD,MAAM,CAAC,MAAM,cAAc,GAAG,MAAM,EAAE,CAAC;AAEvC,cAAc,CAAC,GAAG,CAAC,SAAS,EAAE,OAAO,CAAC,CAAC;AACvC,cAAc,CAAC,IAAI,CAAC,MAAM,EAAE,GAAG,CAAC,CAAC"}
