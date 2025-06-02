@@ -15,5 +15,34 @@ export class LocalityRepository {
         return locality;
     }
 
+    public findOne(id:number){
+        const locality = localities.find((locality) => locality.id === id);
+        return locality;
+    }
+
+    public remove(id:number){
+        const localitiesIdx = localities.findIndex((l)=> l.id === id);
+        let response = undefined
+        if(localitiesIdx != -1){
+            
+            localities.splice(localitiesIdx, 1);
+            response = 1;
+        }
+        return response;
+
+    }
+
+    public update(newLocality: Locality) {
+        const localitiesIdx = localities.findIndex((l) => l.id === newLocality.id);
+        if (localitiesIdx != -1) {
+            localities[localitiesIdx].name = newLocality.name || localities[localitiesIdx].name;
+            localities[localitiesIdx].postal_code = newLocality.postal_code || localities[localitiesIdx].postal_code;
+            localities[localitiesIdx].province = newLocality.province || localities[localitiesIdx].province; 
+        }
+        return localities[localitiesIdx];
+    }
+
+
+
 }
 

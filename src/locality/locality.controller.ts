@@ -17,4 +17,37 @@ function add(req: Request, res: Response) {
     res.status(201).send({ message: "Locality created successfully", data: locality });
 }
 
-export { findAll, add };
+function findOne(req: Request, res: Response) {
+    const id = parseInt(req.params.id);
+    const locality = repository.findOne(id);
+    
+    if (!locality) {
+        res.status(404).send({ message: "Locality not found or doesn't exist" });
+    } else {
+        res.send(locality);
+    }
+}
+
+function remove(req: Request, res: Response) {
+    const id = parseInt(req.params.id);
+    const response = repository.remove(id);
+    if (response === undefined) {
+        res.status(404).send({ message:"Locality unable to be deleted or doesn't exist" });
+    }
+    else {
+        res.send({ message: "Locality deleted successfully" });
+    }
+}
+
+function update(req: Request, res:Response){
+    const id = parseInt(req.params.id);
+    const updateDataLocality = new Locality(0, req.body.name, req.body.postal_code, req.body.province);
+    const updatedLocality = repository.update(updateDataLocality);
+    if (!updatedLocality) {
+        res.status(404).send({ message: "Locality could not bee " });
+    } else {
+        res.send({ message: "Locality updated successfully", data: updatedLocality });
+    }
+}
+
+export { findAll, add, findOne, remove, update };
