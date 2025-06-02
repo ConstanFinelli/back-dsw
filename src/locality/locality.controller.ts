@@ -50,4 +50,5 @@ function update(req: Request, res:Response){
     }
 }
 
+
 export { findAll, add, findOne, remove, update };

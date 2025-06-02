@@ -42,7 +42,5 @@ export class LocalityRepository {
         return localities[localitiesIdx];
     }
 
-
-
 }
 

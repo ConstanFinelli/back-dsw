@@ -6,6 +6,5 @@ export class Locality{
     public postal_code: string,
     public province: string
   ){
-
   }
 }
