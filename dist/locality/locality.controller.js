@@ -24,12 +24,12 @@ function findOne(req, res) {
 }
 function remove(req, res) {
     const id = parseInt(req.params.id);
-    const response = repository.remove(id);
-    if (response === undefined) {
-        res.status(404).send({ message: "Locality unable to be deleted or doesn't exist" });
+    const deletedLocality = repository.remove(id);
+    if (!deletedLocality) {
+        res.status(404).send({ message: "Locality not found or doesn't exist" });
     }
     else {
-        res.send({ message: "Locality deleted successfully" });
+        res.send({ message: "Locality deleted successfully", data: deletedLocality });
     }
 }
 function update(req, res) {
@@ -37,7 +37,7 @@ function update(req, res) {
     const updateDataLocality = new Locality(0, req.body.name, req.body.postal_code, req.body.province);
     const updatedLocality = repository.update(updateDataLocality);
     if (!updatedLocality) {
-        res.status(404).send({ message: "Locality could not bee " });
+        res.status(404).send({ message: "Locality could not be found" });
     }
     else {
         res.send({ message: "Locality updated successfully", data: updatedLocality });

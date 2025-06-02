@@ -15,12 +15,11 @@ export class LocalityRepository {
     }
     remove(id) {
         const localitiesIdx = localities.findIndex((l) => l.id === id);
-        let response = undefined;
+        let deletedLocality;
         if (localitiesIdx != -1) {
-            localities.splice(localitiesIdx, 1);
-            response = 1;
+            deletedLocality = localities.splice(localitiesIdx, 1)[0];
         }
-        return response;
+        return deletedLocality;
     }
     update(newLocality) {
         const localitiesIdx = localities.findIndex((l) => l.id === newLocality.id);

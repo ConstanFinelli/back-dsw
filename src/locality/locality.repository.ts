@@ -22,13 +22,11 @@ export class LocalityRepository {
 
     public remove(id:number){
         const localitiesIdx = localities.findIndex((l)=> l.id === id);
-        let response = undefined
-        if(localitiesIdx != -1){
-            
-            localities.splice(localitiesIdx, 1);
-            response = 1;
+        let deletedLocality: Locality | undefined;
+        if (localitiesIdx != -1) {
+            deletedLocality = localities.splice(localitiesIdx, 1)[0];
         }
-        return response;
+        return deletedLocality;
 
     }
 
