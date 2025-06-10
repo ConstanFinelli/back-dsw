@@ -34,7 +34,7 @@ function remove(req, res) {
 }
 function update(req, res) {
     const id = parseInt(req.params.id);
-    const updateDataLocality = new Locality(0, req.body.name, req.body.postal_code, req.body.province);
+    const updateDataLocality = new Locality(id, req.body.name, req.body.postal_code, req.body.province);
     const updatedLocality = repository.update(updateDataLocality);
     if (!updatedLocality) {
         res.status(404).send({ message: "Locality could not be found" });
