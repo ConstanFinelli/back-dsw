@@ -20,12 +20,12 @@
   },
   "homepage": "https://github.com/ConstanFinelli/back-dsw#readme",
   "dependencies": {
-    "@types/express": "^5.0.2",
     "@types/node": "^22.15.21",
     "express": "^5.1.0",
     "express-validator": "^7.2.1"
   },
   "devDependencies": {
+    "@types/express": "^5.0.2",
     "nodemon": "^3.1.10",
     "tsc-watch": "^6.0.4",
     "typescript": "^5.1.3"
