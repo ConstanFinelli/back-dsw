@@ -18,8 +18,8 @@ export class CouponRepository{
         const couponIdx = coupons.findIndex((c) => c.id == id)
         let deletedCoupon = undefined
         if(couponIdx != -1){
-        coupons.splice(couponIdx, 1)
         deletedCoupon = coupons[couponIdx]
+        coupons.splice(couponIdx, 1)
         }
         return deletedCoupon
     }
