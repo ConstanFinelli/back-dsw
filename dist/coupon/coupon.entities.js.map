@@ -1,1 +1,1 @@
-{"version":3,"file":"coupon.entities.js","sourceRoot":"","sources":["../../src/coupon/coupon.entities.ts"],"names":[],"mappings":""}
+{"version":3,"file":"coupon.entities.js","sourceRoot":"","sources":["../../src/coupon/coupon.entities.ts"],"names":[],"mappings":"AAAA,MAAM,OAAO,MAAM;IACf,YACW,EAAS,EACT,QAAe,EACf,YAAiB,EACjB,MAAa;QAHb,OAAE,GAAF,EAAE,CAAO;QACT,aAAQ,GAAR,QAAQ,CAAO;QACf,iBAAY,GAAZ,YAAY,CAAK;QACjB,WAAM,GAAN,MAAM,CAAO;IAExB,CAAC;CACJ"}

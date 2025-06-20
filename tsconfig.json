@@ -14,6 +14,6 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true
   },
-  "include": ["src/**/*", "**/*.ts", "old/coupon.controller.js", "old/coupon.route.js", "old/coupon.repository.js"],
+  "include": ["src/**/*", "**/*.ts"],
   "exclude": ["node_modules"]
 }
