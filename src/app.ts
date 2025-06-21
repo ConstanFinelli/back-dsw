@@ -1,3 +1,7 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
+
 import express from 'express';
 import {couponRouter} from './coupon/coupon.route.js'
 import {localityRouter} from './locality/locality.route.js';

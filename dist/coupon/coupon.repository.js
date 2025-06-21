@@ -1,35 +1,32 @@
 import { Coupon } from './coupon.entities.js';
-const coupons = [new Coupon(1, 20, new Date(), 'Active')];
+import { pool } from '../shared/db/dbConnection.js';
+const couponsArray = [new Coupon(1, 20, new Date(), 'Active')];
 export class CouponRepository {
-    findAll() {
+    async findAll() {
+        const [coupons] = await pool.query("SELECT * FROM Coupon");
         return coupons;
     }
-    findOne(id) {
-        const coupon = coupons.find((coupon) => coupon.id === id);
+    async findOne(id) {
+        const [coupon] = await pool.query("SELECT * FROM Coupon where id=?", [id]);
+        if (coupon.length == 0) {
+            return undefined;
+        }
+        return coupon[0];
+    }
+    async add(coupon) {
+        const [newCoupon] = await pool.execute("INSERT INTO Coupon (discount, expiringDate, status) VALUES (?, ?, ?)", [coupon.discount, coupon.expiringDate, coupon.status]);
+        coupon.id = newCoupon.insertId;
         return coupon;
     }
-    add(coupon) {
-        coupon.id = coupons.length + 1;
-        coupons.push(coupon);
-        return coupon;
+    async remove(id) {
+        const [deletedCoupon] = await pool.execute("SELECT * FROM Coupon where id=?", [id]);
+        await pool.execute("DELETE FROM Coupon where id=?", [id]);
+        return deletedCoupon[0];
     }
-    remove(id) {
-        const couponIdx = coupons.findIndex((c) => c.id == id);
-        let deletedCoupon = undefined;
-        if (couponIdx != -1) {
-            deletedCoupon = coupons[couponIdx];
-            coupons.splice(couponIdx, 1);
-        }
-        return deletedCoupon;
-    }
-    update(newCoupon) {
-        const couponIdx = coupons.findIndex((c) => c.id == newCoupon.id);
-        if (couponIdx != -1) {
-            coupons[couponIdx].discount = newCoupon.discount || coupons[couponIdx].discount;
-            coupons[couponIdx].status = newCoupon.status || coupons[couponIdx].status;
-            coupons[couponIdx].expiringDate = newCoupon.expiringDate || coupons[couponIdx].expiringDate;
-        }
-        return coupons[couponIdx];
+    async update(newCoupon) {
+        await pool.execute("UPDATE Coupon SET discount=?, expiringDate=?, status=? WHERE id=?", [newCoupon.discount, newCoupon.expiringDate, newCoupon.status, newCoupon.id]);
+        const [updatedCoupon] = await pool.execute("SELECT * FROM Coupon where id=?", [newCoupon.id]);
+        return updatedCoupon[0];
     }
 }
 //# sourceMappingURL=coupon.repository.js.map

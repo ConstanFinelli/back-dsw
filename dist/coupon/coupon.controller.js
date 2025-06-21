@@ -1,40 +1,51 @@
 import { CouponRepository } from "./coupon.repository.js";
 import { Coupon } from "./coupon.entities.js";
 const repository = new CouponRepository();
-function findAll(req, res) {
-    res.send({ data: repository.findAll() });
+async function findAll(req, res) {
+    try {
+        const coupons = await repository.findAll();
+        res.send({ data: coupons });
+    }
+    catch (e) {
+        res.send({ message: e });
+    }
 }
-function findOne(req, res) {
-    const coupon = repository.findOne(Number(req.params.id));
+async function findOne(req, res) {
+    const coupon = await repository.findOne(Number(req.params.id));
     if (!coupon) {
         return res.status(404).send({ message: "Coupon not found" });
     }
     return res.send({ data: coupon });
 }
-function add(req, res) {
+async function add(req, res) {
     const input = req.body.sanitizedInput;
     if (!input.discount || !input.expiringDate || !input.status) {
         return res.status(400).send({ message: "Missing required fields" });
     }
     const coupon = new Coupon(0, input.discount, new Date(), input.status);
-    repository.add(coupon);
-    return res.status(201).send({ message: "Coupon created succesfully", data: coupon });
+    try {
+        const newCoupon = await repository.add(coupon);
+        return res.status(201).send({ message: "Coupon created succesfully", data: newCoupon });
+    }
+    catch (e) {
+        return res.send({ message: e });
+    }
 }
-function remove(req, res) {
-    const deletedCoupon = repository.remove(Number(req.params.id));
+async function remove(req, res) {
+    const deletedCoupon = await repository.remove(Number(req.params.id));
     if (!deletedCoupon) {
         return res.status(404).send({ message: "Coupon not found" });
     }
     return res.status(201).send({ message: "Coupon deleted succesfully", data: deletedCoupon });
 }
-function update(req, res) {
+async function update(req, res) {
     const input = req.body.sanitizedInput;
     const id = req.params.id;
     if (!input.discount || !input.expiringDate || !input.status) {
         return res.status(400).send({ message: "Missing required fields" });
     }
     const newCoupon = new Coupon(Number(id), input.discount, input.expiringDate, input.status);
-    const updated = repository.update(newCoupon);
+    const updated = await repository.update(newCoupon);
     if (!updated) {
         return res.status(404).send({ message: "Coupon not found" });
     }
