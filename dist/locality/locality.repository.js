@@ -1,34 +1,43 @@
 import { Locality } from './locality.entities.js';
-const localities = new Array(new Locality(1, "Rosario", "2000", "Santa Fe"));
+import { pool } from '../shared/db/dbConnection.js';
+const localities = new Array();
 export class LocalityRepository {
-    findAll() {
-        return localities;
+    async findAll() {
+        const [rows] = await pool.query('SELECT * FROM locality');
+        return rows.map((row) => new Locality(row.id, row.name, row.postal_code, row.province));
     }
-    add(locality) {
-        locality.id = localities.length + 1;
-        localities.push(locality);
+    async add(locality) {
+        const [result] = await pool.query('INSERT INTO locality (name, postal_code, province) VALUES (?, ?, ?)', [locality.name, locality.postal_code, locality.province]);
+        // Asigna el id generado por la base de datos
+        locality.id = result.insertId;
         return locality;
     }
-    findOne(id) {
-        const locality = localities.find((locality) => locality.id === id);
+    async findOne(id) {
+        const [rows] = await pool.query('SELECT * FROM locality WHERE id = ?', [id]);
+        const row = rows[0];
+        if (!row) {
+            return undefined;
+        }
+        return new Locality(row.id, row.name, row.postal_code, row.province);
+    }
+    async remove(id) {
+        const localityDelete = await this.findOne(id);
+        if (!localityDelete) {
+            return undefined;
+        }
+        const [result] = await pool.query('DELETE FROM locality WHERE id = ?', [id]);
+        return localityDelete;
+    }
+    async update(newLocality) {
+        const locality = await this.findOne(newLocality.id);
+        if (!locality) {
+            return undefined;
+        }
+        locality.name = newLocality.name || locality.name;
+        locality.postal_code = newLocality.postal_code || locality.postal_code;
+        locality.province = newLocality.province || locality.province;
+        await pool.query('UPDATE locality SET name = ?, postal_code = ?, province = ? WHERE id = ?', [locality.name, locality.postal_code, locality.province, locality.id]);
         return locality;
-    }
-    remove(id) {
-        const localitiesIdx = localities.findIndex((l) => l.id === id);
-        let deletedLocality;
-        if (localitiesIdx != -1) {
-            deletedLocality = localities.splice(localitiesIdx, 1)[0];
-        }
-        return deletedLocality;
-    }
-    update(newLocality) {
-        const localitiesIdx = localities.findIndex((l) => l.id === newLocality.id);
-        if (localitiesIdx != -1) {
-            localities[localitiesIdx].name = newLocality.name || localities[localitiesIdx].name;
-            localities[localitiesIdx].postal_code = newLocality.postal_code || localities[localitiesIdx].postal_code;
-            localities[localitiesIdx].province = newLocality.province || localities[localitiesIdx].province;
-        }
-        return localities[localitiesIdx];
     }
 }
 //# sourceMappingURL=locality.repository.js.map

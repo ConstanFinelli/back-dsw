@@ -7,6 +7,9 @@ import {couponRouter} from './coupon/coupon.route.js'
 import {localityRouter} from './locality/locality.route.js';
 import {categoryrouter} from './category/category.route.js';
 
+
+
+
 const app = express();
 app.use(express.json())
 
