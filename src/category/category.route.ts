@@ -1,22 +1,12 @@
 import { Router } from 'express';
-import {
-  createCategory,
-  getAllCategories,
-  getCategoryById,
-  updateCategory,
-  deleteCategory,
- 
-} from './category.controller.js';
+import { findAll, findOne, add, update, remove, sanitizeCategoryInput } from './category.controller.js';
 
-// 1️⃣ Tipado implícito de `router` gracias a la importación
-export const categoryrouter = Router();
+export const categoryRouter = Router();
 
-// 2️⃣ Rutas con funciones controladoras ya tipadas
-categoryrouter.post('/', createCategory);
-categoryrouter.get('/', getAllCategories);
-categoryrouter.get('/:id', getCategoryById);
-categoryrouter.put('/:id', updateCategory);
-categoryrouter.delete('/:id', deleteCategory);
+categoryRouter.get('/getAll', findAll);
+categoryRouter.get('/getOne/:id', findOne);
+categoryRouter.post('/add', sanitizeCategoryInput, add);
+categoryRouter.patch('/update/:id', sanitizeCategoryInput, update);
+categoryRouter.delete('/remove/:id', remove);
 
-// 3️⃣ Exportación tipada
 

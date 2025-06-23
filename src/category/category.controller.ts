@@ -1,76 +1,76 @@
-// 1️⃣ Cambié la extensión del archivo a `.ts` y ajusté los imports.
-import {
-  addCategory,
-  findAllCategories,
-  findCategoryById,
-  updateCategoryById,
-  removeCategoryById
-} from './category.repository.js';
+import { NextFunction, Request, Response } from "express";
+import { CategoryRepository } from "./category.repository.js";
+import { Category } from "./category.entities.js";
 
-// 2️⃣ Importé los tipos de Express.
-import { Request, Response } from 'express';
+const repository = new CategoryRepository();
 
-// 3️⃣ Definí una interfaz para tipar los datos de una categoría.
-interface Category {
-  id: string;
-  description: string;
-  usertype: string;
+async function findAll(req: Request, res: Response) {
+    try {
+        const categories = await repository.findAll();
+        res.send({ data: categories ?? null });
+    } catch (e) {
+        res.send({ message: e });
+    }
 }
 
-// 4️⃣ Tipé req y res con los tipos de Express y usé la interfaz para req.body.
-export function createCategory(req: Request<{}, {}, Category>, res: Response) {
-  const { id, description, usertype } = req.body;
-
-  if (!id || !description || !usertype) {
-    return res.status(400).json({ message: 'Faltan datos' }) as any ;
-  }
-
-  const exists = findCategoryById(id);
-  if (exists) {
-    return res.status(409).json({ message: 'ID ya registrado' });
-  }
-
-  const newCategory = addCategory({ id, description, usertype });
-  res.status(201).json(newCategory);
+async function findOne(req: Request, res: Response) {
+    const category = await repository.findOne(Number(req.params.id));
+    if (!category) {
+        return res.status(404).send({ message: "Category not found", data: null }) as any;
+    }
+    return res.send({ data: category }) as any;
 }
 
-// 5️⃣ Tipado básico de req y res, y también el valor de retorno (implícito).
-export function getAllCategories(req: Request, res: Response) {
-  res.json(findAllCategories());
+async function add(req: Request, res: Response) {
+    const input = req.body.sanitizedInput;
+    if (!input.description || !input.usertype) {
+        return res.status(400).send({ message: "Missing required fields" }) as any;
+    }
+    const category = new Category(0, input.description, input.usertype);
+    try {
+        const newCategory = await repository.add(category);
+        if (!newCategory) {
+            return res.status(500).send({ message: "Error creating category", data: null }) as any;
+        }
+        return res.status(201).send({ message: "Category created successfully", data: newCategory }) as any;
+    } catch (e) {
+        return res.send({ message: e }) as any;
+    }
 }
 
-// 6️⃣ Tipé `req.params` como un objeto con id (se hace con genéricos de Request).
-export function getCategoryById(req: Request<{ id: string }>, res: Response) {
-  const category = findCategoryById(req.params.id);
-  if (!category) {
-    return res.status(404).json({ message: 'Categoría no encontrada' }) as any ;
-  }
-  res.json(category);
+async function remove(req: Request, res: Response) {
+    const deletedCategory = await repository.remove(Number(req.params.id));
+    if (!deletedCategory) {
+        return res.status(404).send({ message: "Category not found", data: null }) as any;
+    }
+    return res.status(201).send({ message: "Category deleted successfully", data: deletedCategory }) as any;
 }
 
-
-
-// 7️⃣ Tipé `req.params` y `req.body` con interfaces.
-export function updateCategory(
-  req: Request<{ id: string }, {}, Partial<Omit<Category, 'id'>>>,
-  res: Response
-) {
-  const { description, usertype } = req.body;
-  const updated = updateCategoryById(req.params.id, { description, usertype });
-
-  if (!updated) {
-    return res.status(404).json({ message: 'Categoría no encontrada' }) as any ;
-  }
-
-  res.json(updated);
+async function update(req: Request, res: Response) {
+    const input = req.body.sanitizedInput;
+    const id = req.params.id;
+    if (!input.description || !input.usertype) {
+        return res.status(400).send({ message: "Missing required fields" }) as any;
+    }
+    const newCategory = new Category(Number(id), input.description, input.usertype);
+    const updated = await repository.update(newCategory);
+    if (!updated) {
+        return res.status(404).send({ message: "Category not found", data: null }) as any;
+    }
+    return res.status(201).send({ message: "Category updated successfully", category: updated }) as any;
 }
 
-// 8️⃣ Tipé `req.params` de nuevo para la función de borrar.
-export function deleteCategory(req: Request<{ id: string }>, res: Response) {
-  const success = removeCategoryById(req.params.id);
-  if (!success) {
-    return res.status(404).json({ message: 'Categoría no encontrada' }) as any ;
-  }
+function sanitizeCategoryInput(req: Request, res: Response, next: NextFunction) {
+    req.body.sanitizedInput = { description: req.body.description, usertype: req.body.usertype };
 
-  res.status(204).send();
+    Object.keys(req.body.sanitizedInput).forEach((key) => {
+        if (req.body.sanitizedInput[key] === undefined) {
+            delete req.body.sanitizedInput[key];
+        }
+    });
+
+    next();
 }
+
+export { findAll, findOne, add, remove, update, sanitizeCategoryInput };
+

@@ -1,47 +1,54 @@
-// 1️⃣ Definimos una interfaz para las categorías
-export interface Category {
-  id: string;
-  description: string;
-  usertype: string;
+import mysql, { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+import { pool } from '../shared/db/dbConnection.js';
+import { Category } from './category.entities.js';
+
+
+export class CategoryRepository {
+    public async findAll(): Promise<Category[] | null> {
+        const [categories] = await pool.query("SELECT * FROM Category");
+        return (categories as Category[]) ?? null;
+    }
+
+    public async findOne(id: number): Promise<Category | null> {
+        const [category] = await pool.query<RowDataPacket[]>("SELECT * FROM Category WHERE id = ?", [id]);
+        if (category.length === 0) {
+            return null;
+        }
+        return category[0] as Category;
+    }
+
+    public async add(category: Category): Promise<Category | null> {
+        try {
+            const [newCategory] = await pool.execute<ResultSetHeader>(
+                "INSERT INTO Category (description, usertype) VALUES (?, ?)",
+                [category.description, category.usertype]
+            );
+            category.id = (newCategory as ResultSetHeader).insertId;
+            return category;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    public async remove(id: number): Promise<Category | null> {
+        const [deletedCategory] = await pool.execute<RowDataPacket[]>("SELECT * FROM Category WHERE id = ?", [id]);
+        if ((deletedCategory as RowDataPacket[]).length === 0) {
+            return null;
+        }
+        await pool.execute("DELETE FROM Category WHERE id = ?", [id]);
+        return deletedCategory[0] as Category;
+    }
+
+    public async update(newCategory: Category): Promise<Category | null> {
+        await pool.execute(
+            "UPDATE Category SET description = ?, usertype = ? WHERE id = ?",
+            [newCategory.description, newCategory.usertype, newCategory.id]
+        );
+        const [updatedCategory] = await pool.execute<RowDataPacket[]>("SELECT * FROM Category WHERE id = ?", [newCategory.id]);
+        if ((updatedCategory as RowDataPacket[]).length === 0) {
+            return null;
+        }
+        return updatedCategory[0] as Category;
+    }
 }
 
-// 2️⃣ Usamos la interfaz para tipar el arreglo
-let categories: Category[] = [];
-
-// 3️⃣ Tipamos el parámetro de entrada y el retorno
-export function addCategory(category: Category): Category {
-  categories.push(category);
-  return category;
-}
-
-// 4️⃣ Indicamos que retorna un array de categorías
-export function findAllCategories(): Category[] {
-  return categories;
-}
-
-// 5️⃣ Tipamos el parámetro y el posible retorno (puede ser `undefined`)
-export function findCategoryById(id: string): Category | undefined {
-  return categories.find(cat => cat.id === id);
-}
-
-// 6️⃣ Tipamos los parámetros: `data` puede tener solo parte de los campos
-export function updateCategoryById(
-  id: string,
-  data: Partial<Omit<Category, 'id'>>
-): Category | null {
-  const category = findCategoryById(id);
-  if (!category) return null;
-
-  if (data.description) category.description = data.description;
-  if (data.usertype) category.usertype = data.usertype;
-
-  return category;
-}
-
-// 7️⃣ Tipamos retorno booleano
-export function removeCategoryById(id: string): boolean {
-  const index = categories.findIndex(cat => cat.id === id);
-  if (index === -1) return false;
-  categories.splice(index, 1);
-  return true;
-}
