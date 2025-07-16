@@ -1,3 +1,12 @@
 node_modules
 .env
 dist
+
+coverage
+npm-debug.log
+logs
+*.log
+.idea
+.vscode
+.DS_Store
+
