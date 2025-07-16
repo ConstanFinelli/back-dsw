@@ -5,7 +5,7 @@ const config: Options = {
   driver: MySqlDriver, // o 'postgresql', 'sqlite', etc.
   dbName: 'backdsw',
   user: 'root',
-  password: 'skipecontra11',
+  password: 'Popayan304',
   host: 'localhost',
   port: 3306, // cambia según el motor
   entities: ['dist/**/*.entities.js'],

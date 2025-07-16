@@ -16,6 +16,7 @@ app.use((req, res, next)=>{
     RequestContext.create(orm.em, next);
 })
 
+
 app.use('/api/category', categoryRouter) ;
 app.use('/api/coupons', couponRouter);
 app.use('/api/localities', localityRouter);

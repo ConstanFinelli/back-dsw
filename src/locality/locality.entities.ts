@@ -1,10 +1,16 @@
+import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
 
-export class Locality{
-  constructor(
-    public id: number,
-    public name: string,
-    public postal_code: string,
-    public province: string
-  ){
-  }
+@Entity()
+export class Locality {
+  @PrimaryKey()
+  id!: number;
+
+  @Property()
+  name!: string;
+
+  @Property()
+  postal_code!: number;
+
+  @Property()
+  province!: string;
 }
