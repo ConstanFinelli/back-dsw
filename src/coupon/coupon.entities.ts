@@ -8,7 +8,7 @@ export class Coupon{
     @Property()
     discount!:number
 
-    @Property()
+    @Property({fieldName: 'expiringDate'})
     expiringDate!:Date
 
     @Property()
