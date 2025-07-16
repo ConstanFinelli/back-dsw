@@ -1,9 +1,16 @@
+import { Entity, PrimaryKey, Property } from "@mikro-orm/core"
+
+@Entity()
 export class Coupon{
-    constructor(
-        public id:number,
-        public discount:number,
-        public expiringDate:Date,
-        public status:string
-    ){
-    }
+    @PrimaryKey()
+    id?:number
+
+    @Property()
+    discount!:number
+
+    @Property()
+    expiringDate!:Date
+
+    @Property()
+    status!:string
 } 

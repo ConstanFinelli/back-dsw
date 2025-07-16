@@ -20,11 +20,12 @@
   },
   "homepage": "https://github.com/ConstanFinelli/back-dsw#readme",
   "dependencies": {
+    "@mikro-orm/core": "^6.4.16",
+    "@mikro-orm/mysql": "^6.4.16",
     "@types/node": "^22.15.21",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
-    "express-validator": "^7.2.1",
-    "mysql2": "^3.14.1"
+    "express-validator": "^7.2.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.2",
