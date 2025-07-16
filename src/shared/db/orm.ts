@@ -1,4 +1,4 @@
-import { Options } from '@mikro-orm/core';
+import { Options, MikroORM } from '@mikro-orm/core';
 import { MySqlDriver } from '@mikro-orm/mysql';
 
 const config: Options = {
@@ -13,4 +13,6 @@ const config: Options = {
   debug: true,
 };
 
-export default config;
+export const orm = await MikroORM.init(config);
+
+export default orm;

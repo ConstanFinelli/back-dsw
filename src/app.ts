@@ -6,14 +6,15 @@ import express from 'express';
 import {couponRouter} from './coupon/coupon.route.js'
 import {localityRouter} from './locality/locality.route.js';
 import {categoryRouter} from './category/category.route.js';
-
-import { MikroORM } from '@mikro-orm/core';
-import mikroOrmConfig from './shared/db/orm';
+import orm from './shared/db/orm.js';
+import { RequestContext } from '@mikro-orm/core';
 
 const app = express();
 app.use(express.json())
 
-const orm = await MikroORM.init(mikroOrmConfig);
+app.use((req, res, next)=>{
+    RequestContext.create(orm.em, next);
+})
 
 app.use('/api/category', categoryRouter) ;
 app.use('/api/coupons', couponRouter);

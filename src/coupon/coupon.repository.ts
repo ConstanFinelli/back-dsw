@@ -3,11 +3,17 @@ import {Coupon} from './coupon.entities.js'
 import mysql, { ResultSetHeader } from 'mysql2/promise'
 import {pool} from '../shared/db/dbConnection.js'
 import { RowDataPacket } from 'mysql2/promise';
+import orm from '../shared/db/orm.js';
 
-const couponsArray = [new Coupon(1,20, new Date(), 'Active')]
+const em = orm.em
 export class CouponRepository{
     public async findAll():Promise<Coupon[] | undefined>{
-        const [coupons] = await pool.query("SELECT * FROM Coupon") 
+        let coupons = undefined
+        try{
+            coupons = await em.find(Coupon, {})
+        }catch(e:any){
+            console.log(e)
+        }
         return coupons as Coupon[];
     }
     public async findOne(id:number):Promise<Coupon | undefined>{
