@@ -1,54 +1,51 @@
-import mysql, { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
-import { pool } from '../shared/db/dbConnection.js';
-import { Category } from './category.entities.js';
-
+import { MikroORM } from "@mikro-orm/core";
+import { Category } from "./category.entities.js";
+import ormInstance from "../shared/db/orm.js";
 
 export class CategoryRepository {
-    public async findAll(): Promise<Category[] | null> {
-        const [categories] = await pool.query("SELECT * FROM Category");
-        return (categories as Category[]) ?? null;
-    }
+  orm: MikroORM;
 
-    public async findOne(id: number): Promise<Category | null> {
-        const [category] = await pool.query<RowDataPacket[]>("SELECT * FROM Category WHERE id = ?", [id]);
-        if (category.length === 0) {
-            return null;
-        }
-        return category[0] as Category;
-    }
+  constructor() {
+    this.orm = ormInstance;
+  }
 
-    public async add(category: Category): Promise<Category | null> {
-        try {
-            const [newCategory] = await pool.execute<ResultSetHeader>(
-                "INSERT INTO Category (description, usertype) VALUES (?, ?)",
-                [category.description, category.usertype]
-            );
-            category.id = (newCategory as ResultSetHeader).insertId;
-            return category;
-        } catch (error) {
-            return null;
-        }
-    }
+  get em() {
+    return this.orm.em.fork(); // crea un nuevo EM cada vez
+  }
 
-    public async remove(id: number): Promise<Category | null> {
-        const [deletedCategory] = await pool.execute<RowDataPacket[]>("SELECT * FROM Category WHERE id = ?", [id]);
-        if ((deletedCategory as RowDataPacket[]).length === 0) {
-            return null;
-        }
-        await pool.execute("DELETE FROM Category WHERE id = ?", [id]);
-        return deletedCategory[0] as Category;
-    }
+  async findAll(): Promise<Category[]> {
+    const em = this.em;
+    return await em.find(Category, {});
+  }
 
-    public async update(newCategory: Category): Promise<Category | null> {
-        await pool.execute(
-            "UPDATE Category SET description = ?, usertype = ? WHERE id = ?",
-            [newCategory.description, newCategory.usertype, newCategory.id]
-        );
-        const [updatedCategory] = await pool.execute<RowDataPacket[]>("SELECT * FROM Category WHERE id = ?", [newCategory.id]);
-        if ((updatedCategory as RowDataPacket[]).length === 0) {
-            return null;
-        }
-        return updatedCategory[0] as Category;
-    }
+  async findOne(id: number): Promise<Category | null> {
+    const em = this.em;
+    return await em.findOne(Category, { id });
+  }
+
+  async add(category: Category): Promise<Category | null> {
+    const em = this.em;
+    await em.persistAndFlush(category);
+    return category;
+  }
+
+  async remove(id: number): Promise<Category | null> {
+    const em = this.em;
+    const category = await em.findOne(Category, { id });
+    if (!category) return null;
+
+    await em.removeAndFlush(category);
+    return category;
+  }
+
+  async update(category: Category): Promise<Category | null> {
+    const em = this.em;
+    const existing = await em.findOne(Category, { id: category.id });
+    if (!existing) return null;
+
+    existing.description = category.description;
+    existing.usertype = category.usertype;
+    await em.flush();
+    return existing;
+  }
 }
-
