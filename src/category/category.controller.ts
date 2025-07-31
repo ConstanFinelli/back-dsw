@@ -1,6 +1,6 @@
 import { RequestHandler } from "express";
-import { CategoryRepository } from "./category.repository.js";
-import { Category } from "./category.entities.js";
+import { CategoryRepository } from "./category.repository";
+import { Category } from "./category.entities";
 
 const repository = new CategoryRepository();
 
