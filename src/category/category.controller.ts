@@ -1,6 +1,6 @@
 import { RequestHandler } from "express";
-import { CategoryRepository } from "./category.repository";
-import { Category } from "./category.entities";
+import { CategoryRepository } from "./category.repository.js";
+import { Category } from "./category.entities.js";
 
 const repository = new CategoryRepository();
 
@@ -8,6 +8,7 @@ const findAll: RequestHandler = async (req, res) => {
   try {
     const categories = await repository.findAll();
     res.send({ data: categories ?? null });
+    return;
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "Unexpected error";
     res.status(500).send({ message });
@@ -18,9 +19,10 @@ const findOne: RequestHandler = async (req, res) => {
   try {
     const category = await repository.findOne(Number(req.params.id));
     if (!category) {
-      return res.status(404).send({ message: "Category not found", data: null });
+      res.status(404).send({ message: "Category not found", data: null });
+      return
     }
-    return res.send({ data: category });
+    res.send({ data: category });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "Unexpected error";
     res.status(500).send({ message });
@@ -30,7 +32,8 @@ const findOne: RequestHandler = async (req, res) => {
 const add: RequestHandler = async (req, res) => {
   const input = req.body.sanitizedInput;
   if (!input.description || !input.usertype) {
-    return res.status(400).send({ message: "Missing required fields" });
+    res.status(400).send({ message: "Missing required fields" });
+    return;
   }
 
   const category = new Category(input.description, input.usertype);
@@ -38,9 +41,10 @@ const add: RequestHandler = async (req, res) => {
   try {
     const newCategory = await repository.add(category);
     if (!newCategory) {
-      return res.status(500).send({ message: "Error creating category", data: null });
+      res.status(500).send({ message: "Error creating category", data: null });
+      return;
     }
-    return res.status(201).send({ message: "Category created successfully", data: newCategory });
+    res.status(201).send({ message: "Category created successfully", data: newCategory });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "Unexpected error";
     res.status(500).send({ message });
@@ -51,9 +55,10 @@ const remove: RequestHandler = async (req, res) => {
   try {
     const deletedCategory = await repository.remove(Number(req.params.id));
     if (!deletedCategory) {
-      return res.status(404).send({ message: "Category not found", data: null });
+      res.status(404).send({ message: "Category not found", data: null });
+      return;
     }
-    return res.status(200).send({ message: "Category deleted successfully", data: deletedCategory });
+    res.status(200).send({ message: "Category deleted successfully", data: deletedCategory });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "Unexpected error";
     res.status(500).send({ message });
@@ -65,7 +70,8 @@ const update: RequestHandler = async (req, res) => {
   const id = Number(req.params.id);
 
   if (!input.description || !input.usertype) {
-    return res.status(400).send({ message: "Missing required fields" });
+    res.status(400).send({ message: "Missing required fields" });
+    return;
   }
 
   const updatedCategory = new Category(input.description, input.usertype, id);
@@ -73,9 +79,10 @@ const update: RequestHandler = async (req, res) => {
   try {
     const result = await repository.update(updatedCategory);
     if (!result) {
-      return res.status(404).send({ message: "Category not found", data: null });
+      res.status(404).send({ message: "Category not found", data: null });
+      return;
     }
-    return res.status(200).send({ message: "Category updated successfully", category: result });
+    res.status(200).send({ message: "Category updated successfully", category: result });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "Unexpected error";
     res.status(500).send({ message });

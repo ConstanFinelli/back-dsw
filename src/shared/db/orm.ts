@@ -1,5 +1,6 @@
 import { Options, MikroORM } from '@mikro-orm/core';
 import { MySqlDriver } from '@mikro-orm/mysql';
+import { update } from '../../coupon/coupon.controller';
 
 const config: Options = {
   driver: MySqlDriver, // o 'postgresql', 'sqlite', etc.
@@ -14,5 +15,6 @@ const config: Options = {
 };
 
 export const orm = await MikroORM.init(config);
+
 
 export default orm;
