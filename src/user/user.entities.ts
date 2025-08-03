@@ -14,12 +14,13 @@ export class User {
   @Property()
   email!: string;
 
+  // Contraseña encriptada
   @Property()
   password!: string;
 
-  // A definir si sera un string o un numero para definir la categoria
+  // 0 para admin, 1 para dueño, 2 para usuario
   @Property()
-  category!: string;
+  category!: number;
 
   @Property({ onCreate: () => new Date() })
   createdAt!: Date;

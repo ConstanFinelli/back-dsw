@@ -1,17 +1,16 @@
 import { Options, MikroORM } from '@mikro-orm/core';
 import { MySqlDriver } from '@mikro-orm/mysql';
-import { update } from '../../coupon/coupon.controller';
 
 const config: Options = {
   driver: MySqlDriver, // o 'postgresql', 'sqlite', etc.
-  dbName: 'backdsw',
-  user: 'root',
-  password: 'Popayan304',
-  host: 'localhost',
-  port: 3306, // cambia según el motor
+  dbName: process.env.DB_NAME || 'backdsw',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  host: process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.DB_PORT || '3306'),
   entities: ['dist/**/*.entities.js'],
   entitiesTs: ['src/**/*.entities.ts'],
-  debug: true,
+  debug: process.env.DB_DEBUG === 'true' || false,
 };
 
 export const orm = await MikroORM.init(config);
