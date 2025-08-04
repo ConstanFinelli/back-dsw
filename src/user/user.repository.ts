@@ -16,7 +16,7 @@ export class UserRepository {
     }
 
     public async add(user: User): Promise<User | undefined> {
-        const userCreated = em.create(User, user);
+        const userCreated = await em.create(User, user);
         await em.flush();
         return userCreated as User;
     }

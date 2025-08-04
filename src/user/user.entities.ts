@@ -1,6 +1,7 @@
 import { Rel, Collection, Entity, ManyToOne, OneToMany, OneToOne, PrimaryKey, Property } from "@mikro-orm/core"
-import { Category } from "../category/category.entities";
-import { Business } from "../business/business.entities";
+import { Category } from "../category/category.entities.js";
+import { Business } from "../business/business.entities.js";
+import { Reservation } from "../reservation/reservation.entities.js";
 
 @Entity()
 export class User {
@@ -32,4 +33,7 @@ export class User {
 
   @Property({ onUpdate: () => new Date() })
   updatedAt!: Date;
+
+  @OneToMany(()=> Reservation, (reservation) => reservation.user)
+  reservations = new Collection<User>(this); // añadida bidireccionalidad
 }

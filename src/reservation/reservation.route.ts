@@ -1,16 +1,15 @@
 import { Router } from "express";
 import { findAll, findOne, add, remove, update, sanitizeReservationInput } from "./reservation.controller.js";
 
-const router = Router();
+export const reservationRouter = Router(); // cambio de export y nombre de router para facilidad en app.ts
 
-router.get("/", findAll);
+reservationRouter.get("/", findAll);
 
-router.get("/:id", findOne);
+reservationRouter.get("/:id", findOne);
 
-router.post("/", sanitizeReservationInput, add);
+reservationRouter.post("/", sanitizeReservationInput, add);
 
-router.put("/:id", sanitizeReservationInput, update);
+reservationRouter.put("/:id", sanitizeReservationInput, update);
 
-router.delete("/:id", remove);
+reservationRouter.delete("/:id", remove);
 
-export default router;

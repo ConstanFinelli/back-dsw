@@ -1,6 +1,7 @@
-import { Entity, ManyToOne, OneToMany, OneToOne, PrimaryKey, Property } from '@mikro-orm/core';
-import { Locality } from '../locality/locality.entities';
-import { User } from '../user/user.entities';
+import { Collection, Entity, ManyToOne, OneToMany, OneToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import { Locality } from '../locality/locality.entities.js';
+import { User } from '../user/user.entities.js';
+import { Pitch } from '../pitch/pitch.entities.js';
 
 @Entity()
 export class Business {
@@ -26,4 +27,6 @@ export class Business {
   @Property()
   reservationDepositPercentage!: number;
 
+  @OneToMany(() => Pitch, (pitch) => pitch.business)
+  pitchs = new Collection<Pitch>(this); // añadida bidireccionalidad
 }

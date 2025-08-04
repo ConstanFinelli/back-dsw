@@ -1,4 +1,4 @@
-import { Business } from "./business.entities";
+import { Business } from "./business.entities.js";
 import orm from "../shared/db/orm.js";
 
 const em = orm.em;
@@ -9,7 +9,8 @@ export class BusinessRepository {
     }
 
     public async add(business: Business): Promise<Business> {
-        await em.persistAndFlush(business);
+        await em.create(Business, business); // con persistAndFlush tira ValidationError
+        await em.flush()
         return business;
     }
 

@@ -16,7 +16,7 @@ export class ReservationRepository {
   }
 
   public async add(reservation: Reservation): Promise<Reservation> {
-    em.persist(reservation);
+    await em.create(Reservation, reservation); // persist and flush no anda en este caso
     await em.flush();
     return reservation;
   }
