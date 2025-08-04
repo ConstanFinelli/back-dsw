@@ -1,5 +1,5 @@
 import { Rel, Collection, Entity, ManyToOne, OneToMany, PrimaryKey, Property } from "@mikro-orm/core"
-//import { Reservation } from "../reservation/reservation.entities.js"
+import { Reservation } from "../reservation/reservation.entities.js"
 import { Business } from "../business/business.entities.js"
 
 @Entity()
@@ -22,8 +22,8 @@ export class Pitch{
     @Property()
     price!:number
 
-    //@OneToMany(() => Reservation, (reservation) => reservation.pitch) 
-    //reservations = new Collection<Reservation>(this);
+    @OneToMany(() => Reservation, (reservation) => reservation.pitch) 
+    reservations = new Collection<Reservation>(this);
 
     @ManyToOne(() => Business, {nullable: false})
     business!: Rel<Business>;
