@@ -89,27 +89,17 @@ async function add(req: Request, res: Response) {
         Object.assign(userEntity, userData);
 
         const newUser = await userRepository.add(userEntity);
-
-        // No devolver la contraseña en la respuesta
-        const { password, ...userResponse } = newUser;
-
-        res.status(201).json({ 
-            message: "User created successfully", 
-            data: userResponse 
+        const userResponse = { ...newUser, password: undefined }; // Excluir la contraseña del response
+        res.status(201).json({
+            message: "User created successfully",
+            data: userResponse
         });
 
-    } catch (error) {
-        console.error('Error creating user:', error);
-        
-        // Manejar errores específicos de BD
-        if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({ 
-                message: "Email already exists" 
-            });
-        }
-        
-        res.status(500).json({ 
-            message: "Internal server error" 
+    } catch(e) {
+        console.error('Error creating user:', e);
+        res.status(500).json({
+            message: "Internal server error",
+            error: e
         });
     }
 }
@@ -125,7 +115,8 @@ async function deleteUser(req: Request, res: Response) {
     } catch (e) {
         res.send({ message: e });
     }
-}async function update(req: Request, res: Response) {
+}
+async function update(req: Request, res: Response) {
     try {
         const userId = Number(req.params.id);
         
@@ -201,4 +192,4 @@ async function deleteUser(req: Request, res: Response) {
     }
 }   
 
-export { findAll, findOne, add, deleteUser, update };
+export { findAll, findOne, deleteUser, update, add };
