@@ -7,6 +7,7 @@ import {localityRouter} from './locality/locality.route.js';
 import {categoryRouter} from './category/category.route.js';
 import { pitchRouter } from './pitch/pitch.route.js';
 import { userRouter } from './user/user.route.js';
+import { businessRouter } from './business/business.route.js';
 
 import orm from './shared/db/orm.js';
 import { RequestContext } from '@mikro-orm/core';
@@ -25,6 +26,7 @@ app.use('/api/coupons', couponRouter);
 app.use('/api/localities', localityRouter);
 app.use('/api/pitchs', pitchRouter);
 app.use('/api/users', userRouter);
+app.use('/api/business', businessRouter);
 
 // se asegura de la base de datos este creada, actualizada y levanta el servidor
 

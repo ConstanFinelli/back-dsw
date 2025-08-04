@@ -125,8 +125,8 @@ async function deleteUser(req: Request, res: Response) {
         }
 
         // Combinar usuario existente con nuevos datos
-        const updatedUser = { ...user, ...filteredUpdateData };
-        const result = await userRepository.update(userId, updatedUser);
+        const updatedUser = { ...user, ...filteredUpdateData, id: userId };
+        const result = await userRepository.update(updatedUser);
         
         res.send({ 
             message: "User updated successfully", 

@@ -1,4 +1,6 @@
-import { Rel, Collection, Entity, ManyToOne, OneToMany, PrimaryKey, Property } from "@mikro-orm/core"
+import { Rel, Collection, Entity, ManyToOne, OneToMany, OneToOne, PrimaryKey, Property } from "@mikro-orm/core"
+import { Category } from "../category/category.entities";
+import { Business } from "../business/business.entities";
 
 @Entity()
 export class User {
@@ -14,13 +16,16 @@ export class User {
   @Property()
   email!: string;
 
+  @Property()
+  phoneNumber?: number;
+
   // Contraseña encriptada
   @Property()
   password!: string;
 
-  // 0 para admin, 1 para dueño, 2 para usuario
-  @Property()
-  category!: number;
+  // Relación con la categoría
+  @ManyToOne(() => Category)
+  category!: Category;
 
   @Property({ onCreate: () => new Date() })
   createdAt!: Date;

@@ -27,12 +27,18 @@ export class UserRepository {
         return removedUser as User;
     }
 
-    public async update(id: number, newUser: User): Promise<User | undefined> {
-        const updatedUser = await em.findOneOrFail(User, { id });
-        em.assign(updatedUser, newUser);
+    public async update(newUser: User): Promise<User | undefined> {
+        const user = await this.findOne(newUser.id);
+        if (!user) {
+            return undefined;
+        }
+        user.name = newUser.name || user.name;
+        user.surname = newUser.surname || user.surname;
+        user.email = newUser.email || user.email;
+        user.phoneNumber = newUser.phoneNumber || user.phoneNumber;
+        user.password = newUser.password || user.password;
+        user.category = newUser.category || user.category;
         await em.flush();
-        return updatedUser as User;
+        return user as User;
+        }
     }
-
-
-}
