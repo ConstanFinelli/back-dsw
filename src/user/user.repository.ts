@@ -5,6 +5,14 @@ const em = orm.em;
 
 export class UserRepository {
 
+    public async findByEmail(email: string): Promise<User | undefined> {
+        const user = await em.findOne(User, { email });
+        if (!user) {
+            return undefined;
+        }
+        return user as User;
+    }
+
     public async findAll(): Promise<User[] | undefined> {
         const users = await em.find(User, {}, { populate: ['category'] });
         return users as User[];
@@ -42,3 +50,4 @@ export class UserRepository {
         return user as User;
         }
     }
+
