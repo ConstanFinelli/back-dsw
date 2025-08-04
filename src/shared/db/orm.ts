@@ -3,14 +3,14 @@ import { MySqlDriver } from '@mikro-orm/mysql';
 
 const config: Options = {
   driver: MySqlDriver, // o 'postgresql', 'sqlite', etc.
-  dbName: process.env.DB_NAME || 'backdsw',
-  user: process.env.DB_USER || 'root',
+  dbName: process.env.DB_NAME || '',
+  user: process.env.DB_USER || '',
   password: process.env.DB_PASSWORD || '',
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '3306'),
+  host: process.env.DB_HOST || '',
+  port: parseInt(process.env.DB_PORT || ''),
   entities: ['dist/**/*.entities.js'],
   entitiesTs: ['src/**/*.entities.ts'],
-  debug: process.env.DB_DEBUG === 'true' || false,
+  debug: process.env.DB_DEBUG === '' || false,
 };
 
 export const orm = await MikroORM.init(config);
