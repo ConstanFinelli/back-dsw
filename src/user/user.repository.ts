@@ -14,7 +14,10 @@ export class UserRepository {
     }
 
     public async findAll(): Promise<User[] | undefined> {
-        const users = await em.find(User, {}, { populate: ['category'] });
+        const users = await em.find(User, {}, { 
+            populate: ['category'],
+            fields: ['id', 'name', 'surname', 'email', 'phoneNumber', 'category', 'createdAt', 'updatedAt']
+        });
         return users as User[];
     }
 
@@ -36,6 +39,9 @@ export class UserRepository {
     }
 
     public async update(newUser: User): Promise<User | undefined> {
+        if (!newUser.id) {
+            throw new Error('User ID is required for update');
+        }
         const user = await this.findOne(newUser.id);
         if (!user) {
             return undefined;

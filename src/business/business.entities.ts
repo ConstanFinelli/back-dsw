@@ -6,7 +6,7 @@ import { Pitch } from '../pitch/pitch.entities.js';
 @Entity()
 export class Business {
   @PrimaryKey()
-  id!: number;
+  id?: number;
 
   // relacion del dueño con el negocio
   @OneToOne(() => User, { owner: true })

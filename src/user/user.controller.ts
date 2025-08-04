@@ -2,11 +2,12 @@ import { NextFunction, Request, Response } from "express";
 import { UserRepository } from "./user.repository.js";
 import bcrypt from "bcryptjs";
 import { User } from "./user.entities.js";
-
+import { CategoryRepository } from "../category/category.repository.js";
 
 const userRepository = new UserRepository();
+const categoryRepository = new CategoryRepository();
 
-async function findAll(req: Request, res: Response) {
+async function findAll(req: Request, res: Response): Promise<void> {
     try {
         const users = await userRepository.findAll();
         res.send({ data: users });
@@ -15,7 +16,7 @@ async function findAll(req: Request, res: Response) {
     }
 }
 
-async function findOne(req: Request, res: Response) {
+async function findOne(req: Request, res: Response): Promise<void> {
     try {
         const user = await userRepository.findOne(Number(req.params.id));
         if (!user) {
@@ -28,7 +29,7 @@ async function findOne(req: Request, res: Response) {
     }
 }
 
-async function add(req: Request, res: Response) {
+async function add(req:Request, res: Response): Promise<void> {
     try {
         const user = req.body;
         const validationErrors = [];
@@ -50,26 +51,37 @@ async function add(req: Request, res: Response) {
         } else if (user.password.length < 6) {
             validationErrors.push({ field: 'password', message: 'Password must be at least 6 characters' });
         }
-        if (!user.category?.trim()) {
-            validationErrors.push({ field: 'category', message: 'Category is required' });
-        } else if (!['admin', 'user', 'business_owner'].includes(user.category)) {
-            validationErrors.push({ field: 'category', message: 'Invalid category' });
+        if (!user.categoryId) {
+            validationErrors.push({ field: 'categoryId', message: 'Category ID is required' });
+        } else if (isNaN(Number(user.categoryId))) {
+            validationErrors.push({ field: 'categoryId', message: 'Category ID must be a number' });
         }
 
         // Si hay errores de validación, devolver inmediatamente
         if (validationErrors.length > 0) {
-            return res.status(400).json({ 
+            res.status(400).json({ 
                 message: "Validation errors", 
                 errors: validationErrors 
             });
+            return;
         }
 
         // Verificar que el email no esté ya registrado
         const existingUser = await userRepository.findByEmail(user.email);
         if (existingUser) {
-            return res.status(409).json({ 
+            res.status(409).json({ 
                 message: "Email already exists" 
             });
+            return;
+        }
+
+        // Verificar que la categoría existe
+        const category = await categoryRepository.findOne(Number(user.categoryId));
+        if (!category) {
+            res.status(400).json({ 
+                message: "Category not found" 
+            });
+            return;
         }
 
         // Hashear la contraseña antes de guardar
@@ -77,16 +89,13 @@ async function add(req: Request, res: Response) {
         const hashedPassword = await bcrypt.hash(user.password, saltRounds);
 
         // Crear objeto usuario con contraseña hasheada
-        const userData = {
-            name: user.name.trim(),
-            surname: user.surname.trim(),
-            email: user.email.toLowerCase().trim(),
-            password: hashedPassword,
-            category: user.category,
-            phoneNumber: user.phoneNumber || null
-        };
         const userEntity = new User();
-        Object.assign(userEntity, userData);
+        userEntity.name = user.name.trim();
+        userEntity.surname = user.surname.trim();
+        userEntity.email = user.email.toLowerCase().trim();
+        userEntity.password = hashedPassword;
+        userEntity.category = category; // Asignar la entidad Category completa
+        userEntity.phoneNumber = user.phoneNumber || null;
 
         const newUser = await userRepository.add(userEntity);
         const userResponse = { ...newUser, password: undefined }; // Excluir la contraseña del response
@@ -104,7 +113,7 @@ async function add(req: Request, res: Response) {
     }
 }
 
-async function deleteUser(req: Request, res: Response) {
+async function deleteUser(req: Request, res: Response): Promise<void> {
     try {
         const user = await userRepository.remove(Number(req.params.id));
         if (!user) {
@@ -116,7 +125,7 @@ async function deleteUser(req: Request, res: Response) {
         res.send({ message: e });
     }
 }
-async function update(req: Request, res: Response) {
+async function update(req: Request, res: Response): Promise<void> {
     try {
         const userId = Number(req.params.id);
         

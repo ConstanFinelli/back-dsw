@@ -22,7 +22,7 @@ app.use((req, res, next)=>{
 })
 
 
-app.use('/api/category', categoryRouter, ) ;
+app.use('/api/category', categoryRouter);
 app.use('/api/coupons', couponRouter);
 app.use('/api/localities', localityRouter);
 app.use('/api/pitchs', pitchRouter);

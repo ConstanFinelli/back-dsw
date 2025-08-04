@@ -28,6 +28,9 @@ export class BusinessRepository {
     }
 
     public async update(newBusiness: Business): Promise<Business | null> {
+        if (!newBusiness.id) {
+            throw new Error('Business ID is required for update');
+        }
         const business = await this.findOne(newBusiness.id);
         if (!business) {
             return null;

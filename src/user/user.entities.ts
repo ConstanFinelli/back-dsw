@@ -6,7 +6,7 @@ import { Reservation } from "../reservation/reservation.entities.js";
 @Entity()
 export class User {
   @PrimaryKey()
-  id!: number;
+  id?: number; // Hacer el id opcional para permitir que la base de datos lo genere
 
   @Property()
   name!: string;
@@ -17,23 +17,23 @@ export class User {
   @Property()
   email!: string;
 
-  @Property()
-  phoneNumber?: number;
+  @Property({ nullable: true }) // Hacer phoneNumber nullable
+  phoneNumber?: string; // Cambiar de number a string
 
   // Contraseña encriptada
   @Property()
   password!: string;
 
   // Relación con la categoría
-  @ManyToOne(() => Category)
+  @ManyToOne(() => Category, { nullable: false }) // Explícitamente no nullable
   category!: Category;
 
   @Property({ onCreate: () => new Date() })
   createdAt!: Date;
 
-  @Property({ onUpdate: () => new Date() })
+  @Property({ onUpdate: () => new Date(), nullable: true })
   updatedAt!: Date;
 
   @OneToMany(()=> Reservation, (reservation) => reservation.user)
-  reservations = new Collection<User>(this); // añadida bidireccionalidad
+  reservations = new Collection<Reservation>(this); // añadida bidireccionalidad
 }
