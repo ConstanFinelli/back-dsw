@@ -1,5 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import { UserRepository } from "./user.repository.js";
+import bcrypt from "bcryptjs";
+import { User } from "./user.entities.js";
+
 
 const userRepository = new UserRepository();
 
@@ -28,26 +31,86 @@ async function findOne(req: Request, res: Response) {
 async function add(req: Request, res: Response) {
     try {
         const user = req.body;
-        const missingFields = [];
+        const validationErrors = [];
         
-        if (!user.name) missingFields.push('name');
-        if (!user.surname) missingFields.push('surname');
-        if (!user.email) missingFields.push('email');
-        if (!user.password) missingFields.push('password');
-        if (!user.category) missingFields.push('category');
-        
-        if (missingFields.length > 0) {
-            res.status(400).send({ 
-                message: "Missing required fields", 
-                missingFields: missingFields 
+        // Validar campos requeridos
+        if (!user.name?.trim()) {
+            validationErrors.push({ field: 'name', message: 'Name is required' });
+        }
+        if (!user.surname?.trim()) {
+            validationErrors.push({ field: 'surname', message: 'Surname is required' });
+        }
+        if (!user.email?.trim()) {
+            validationErrors.push({ field: 'email', message: 'Email is required' });
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
+            validationErrors.push({ field: 'email', message: 'Invalid email format' });
+        }
+        if (!user.password?.trim()) {
+            validationErrors.push({ field: 'password', message: 'Password is required' });
+        } else if (user.password.length < 6) {
+            validationErrors.push({ field: 'password', message: 'Password must be at least 6 characters' });
+        }
+        if (!user.category?.trim()) {
+            validationErrors.push({ field: 'category', message: 'Category is required' });
+        } else if (!['admin', 'user', 'business_owner'].includes(user.category)) {
+            validationErrors.push({ field: 'category', message: 'Invalid category' });
+        }
+
+        // Si hay errores de validación, devolver inmediatamente
+        if (validationErrors.length > 0) {
+            return res.status(400).json({ 
+                message: "Validation errors", 
+                errors: validationErrors 
             });
-            return;
+        }
+
+        // Verificar que el email no esté ya registrado
+        const existingUser = await userRepository.findByEmail(user.email);
+        if (existingUser) {
+            return res.status(409).json({ 
+                message: "Email already exists" 
+            });
+        }
+
+        // Hashear la contraseña antes de guardar
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(user.password, saltRounds);
+
+        // Crear objeto usuario con contraseña hasheada
+        const userData = {
+            name: user.name.trim(),
+            surname: user.surname.trim(),
+            email: user.email.toLowerCase().trim(),
+            password: hashedPassword,
+            category: user.category,
+            phoneNumber: user.phoneNumber || null
+        };
+        const userEntity = new User();
+        Object.assign(userEntity, userData);
+
+        const newUser = await userRepository.add(userEntity);
+
+        // No devolver la contraseña en la respuesta
+        const { password, ...userResponse } = newUser;
+
+        res.status(201).json({ 
+            message: "User created successfully", 
+            data: userResponse 
+        });
+
+    } catch (error) {
+        console.error('Error creating user:', error);
+        
+        // Manejar errores específicos de BD
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ 
+                message: "Email already exists" 
+            });
         }
         
-        const newUser = await userRepository.add(user);
-        res.status(201).send({ message: "User created successfully", data: newUser });
-    } catch (e) {
-        res.send({ message: e });
+        res.status(500).json({ 
+            message: "Internal server error" 
+        });
     }
 }
 

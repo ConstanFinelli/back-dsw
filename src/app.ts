@@ -12,6 +12,7 @@ import { reservationRouter } from './reservation/reservation.route.js';
 import orm from './shared/db/orm.js';
 import { RequestContext } from '@mikro-orm/core';
 import {SchemaGenerator} from '@mikro-orm/mysql';
+import { authenticateWithCategories } from './middlewares/auth.middleware.js';
 
 const app = express();
 app.use(express.json())
@@ -21,7 +22,7 @@ app.use((req, res, next)=>{
 })
 
 
-app.use('/api/category', categoryRouter) ;
+app.use('/api/category', categoryRouter, ) ;
 app.use('/api/coupons', couponRouter);
 app.use('/api/localities', localityRouter);
 app.use('/api/pitchs', pitchRouter);
