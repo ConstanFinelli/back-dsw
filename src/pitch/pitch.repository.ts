@@ -5,7 +5,7 @@ const em = orm.em
 
 export class PitchRepository {
     public async findAll():Promise<Pitch[] | undefined>{
-            const pitchs = await em.find(Pitch, {}, {populate:['business', 'reservations']})
+            const pitchs = await em.find(Pitch, {}, {populate:['business']})
     
             return pitchs as Pitch[];
         }
