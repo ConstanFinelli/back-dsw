@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 import { Entity, ManyToOne, OneToMany, OneToOne, PrimaryKey, Property } from '@mikro-orm/core';
 import { Locality } from '../locality/locality.entities';
 import { User } from '../user/user.entities';
@@ -29,4 +27,3 @@ export class Business {
   reservationDepositPercentage!: number;
 
 }
->>>>>>> c65e3ee2469bc1069fff788ddaab47232386a095
