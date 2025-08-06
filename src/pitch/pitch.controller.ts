@@ -6,46 +6,46 @@ const repository = new PitchRepository()
 async function findAll(req:Request, res:Response){
     try{
         const pitchs = await repository.findAll()
-        res.send({data:pitchs})
+        res.status(200).send({data:pitchs})
     }
     catch(e){
-        res.send({message:e})
+        res.status(404).send({message:e})
     }
 }
 
 async function findOne(req:Request, res:Response){
     try{
         const pitch = await repository.findOne(Number.parseInt(req.params.id))
-        res.send({data:pitch})
+        res.status(200).send({data:pitch})
     }catch(e){
-        res.send({error:e})
+        res.status(404).send({error:e})
     }
 }
 
 async function add(req:Request, res:Response){
     try{
         const pitch = await repository.add(req.body.sanitizedInput)
-        res.send({data:pitch})
+        res.status(201).send({data:pitch})
     }catch(e:any){
-        res.send({error:e})
+        res.status(400).send({error:e})
     }
 }
 
 async function remove(req:Request, res:Response){
     try{
         const pitch = await repository.remove(Number.parseInt(req.params.id))
-        res.send({removedPitch:pitch})
+        res.status(200).send({removedPitch:pitch})
     }catch(e:any){
-        res.send({error:e})
+        res.status(400).send({error:e})
     }
 }
 
 async function update(req:Request, res:Response){
     try{
         const pitch = await repository.update(Number.parseInt(req.params.id) ,req.body.sanitizedInput)
-        res.send({updatedPitch:pitch})
+        res.status(200).send({updatedPitch:pitch})
     }catch(e:any){
-        res.send({error:e})
+        res.status(400).send({error:e})
     }
 }
 

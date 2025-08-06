@@ -7,46 +7,46 @@ const repository = new CouponRepository()
 async function findAll(req:Request, res:Response){
     try{
         const coupons = await repository.findAll()
-        res.send({data:coupons})
+        res.status(200).send({data:coupons})
     }
     catch(e){
-        res.send({message:e})
+        res.status(404).send({message:e})
     }
 }
 
 async function findOne(req:Request, res:Response){
     try{
         const coupon = await repository.findOne(Number.parseInt(req.params.id))
-        res.send({data:coupon})
+        res.status(200).send({data:coupon})
     }catch(e){
-        res.send({error:e})
+        res.status(404).send({error:e})
     }
 }
 
 async function add(req:Request, res:Response){
     try{
         const coupon = await repository.add(req.body.sanitizedInput)
-        res.send({data:coupon})
+        res.status(201).send({data:coupon})
     }catch(e:any){
-        res.send({error:e})
+        res.status(400).send({error:e})
     }
 }
 
 async function remove(req:Request, res:Response){
     try{
         const coupon = await repository.remove(Number.parseInt(req.params.id))
-        res.send({removedCoupon:coupon})
+        res.status(200).send({removedCoupon:coupon})
     }catch(e:any){
-        res.send({error:e})
+        res.status(400).send({error:e})
     }
 }
 
 async function update(req:Request, res:Response){
     try{
         const coupon = await repository.update(Number.parseInt(req.params.id) ,req.body.sanitizedInput)
-        res.send({updatedCoupon:coupon})
+        res.status(200).send({updatedCoupon:coupon})
     }catch(e:any){
-        res.send({error:e})
+        res.status(400).send({error:e})
     }
 }
 
