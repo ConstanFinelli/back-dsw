@@ -8,6 +8,7 @@ import { pitchRouter } from './pitch/pitch.route.js';
 import { userRouter } from './user/user.route.js';
 import { businessRouter } from './business/business.route.js';
 import { reservationRouter } from './reservation/reservation.route.js';
+import cors from "cors";
 
 import orm from './shared/db/orm.js';
 import { RequestContext } from '@mikro-orm/core';
@@ -16,7 +17,7 @@ import { authenticateWithCategories } from './middlewares/auth.middleware.js';
 
 const app = express();
 app.use(express.json())
-
+app.use(cors());
 app.use((req, res, next)=>{
     RequestContext.create(orm.em, next);
 })
