@@ -1,4 +1,4 @@
-import { Collection, Entity, ManyToOne, OneToMany, OneToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import { FloatType, Collection, Entity, ManyToOne, OneToMany, OneToOne, PrimaryKey, Property } from '@mikro-orm/core';
 import { Locality } from '../locality/locality.entities.js';
 import { User } from '../user/user.entities.js';
 import { Pitch } from '../pitch/pitch.entities.js';
@@ -25,7 +25,7 @@ export class Business {
   averageRating!: number;
 
   @Property()
-  reservationDepositPercentage!: number;
+  reservationDepositPercentage  = new FloatType; // para registrarlo como float, si no lo redondea
 
   @OneToMany(() => Pitch, (pitch) => pitch.business)
   pitchs = new Collection<Pitch>(this); // añadida bidireccionalidad

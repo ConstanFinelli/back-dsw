@@ -1,4 +1,4 @@
-import { Entity, PrimaryKey, Property } from "@mikro-orm/core"
+import { Entity, FloatType, PrimaryKey, Property } from "@mikro-orm/core"
 
 @Entity()
 export class Coupon{
@@ -6,7 +6,7 @@ export class Coupon{
     id?:number
 
     @Property()
-    discount!:number
+    discount = new FloatType;
 
     @Property({fieldName: 'expiringDate'})
     expiringDate!:Date
