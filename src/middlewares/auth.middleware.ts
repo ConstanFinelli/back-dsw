@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import Jwt from "jsonwebtoken";
+import { User } from "../user/user.entities";
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -38,4 +39,18 @@ export function authenticateWithCategories(allowedCategories: string[]) {
       next();
     });
   };
+}
+
+export function createToken(user:User): string{ // crea el JWT
+  return Jwt.sign(
+      {
+        id:user.id,
+        email:user.email,
+        category:user.category,
+        name:user.name
+      },
+        process.env.JWT_SECRET! as string,
+      {
+        expiresIn: '24h',
+      })
 }
