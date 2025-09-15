@@ -6,7 +6,7 @@ const em = orm.em;
 export class UserRepository {
 
     public async findByEmail(email: string): Promise<User | undefined> {
-        const user = await em.findOne(User, { email });
+        const user = await em.findOne(User, { email }, { populate: ['category'] });
         if (!user) {
             return undefined;
         }

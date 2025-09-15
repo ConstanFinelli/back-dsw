@@ -15,6 +15,7 @@ import orm from './shared/db/orm.js';
 import { RequestContext } from '@mikro-orm/core';
 import {SchemaGenerator} from '@mikro-orm/mysql';
 import { authenticateWithCategories } from './middlewares/auth.middleware.js';
+import { DatabaseSeeder } from './shared/seed/seed.js';
 
 const app = express();
 app.use(express.json())
@@ -24,27 +25,51 @@ app.use((req, res, next)=>{
 })
 
 
-app.use('/api/category', categoryRouter);
-app.use('/api/coupons', couponRouter);
-app.use('/api/localities', localityRouter);
-app.use('/api/pitchs', pitchRouter);
-app.use('/api/users', userRouter);
-app.use('/api/business', businessRouter);
-app.use('/api/reservations', reservationRouter);
-app.use('/api/login', loginRouter);
+app.use('/api/category', authenticateWithCategories(['admin']), categoryRouter);
+app.use('/api/coupons', authenticateWithCategories(['admin']), couponRouter);
+app.use('/api/localities', authenticateWithCategories(['admin']), localityRouter);
+app.use('/api/pitchs', authenticateWithCategories(['admin']), pitchRouter);
+app.use('/api/users', authenticateWithCategories(['admin']), userRouter);
+app.use('/api/business', authenticateWithCategories(['admin', 'business_owner']), businessRouter);
+app.use('/api/reservations', authenticateWithCategories(['admin', 'user', 'business_owner']), reservationRouter);
+app.use('/api/login', loginRouter); // Login SIN protección
 
 // se asegura de la base de datos este creada, actualizada y levanta el servidor
 
 async function start() {
+  try {
+    console.log('🚀 Iniciando aplicación...');
 
+    const generator = orm.getSchemaGenerator();
+    
+    // Crear un EntityManager contextual para operaciones de seeding
+    const em = orm.em.fork();
+    
+    // Verificar si necesitamos hacer seeding inicial antes de actualizar el esquema
+    const needsSeeding = await DatabaseSeeder.needsInitialSeeding(em);
+    
+    console.log('🗃️  Actualizando esquema de base de datos...');
+    await generator.updateSchema();
+    
+    // Si necesitaba seeding y acabamos de actualizar el esquema, 
+    // es muy probable que las tablas se hayan creado ahora
+    if (needsSeeding) {
+      console.log('🌱 Base de datos nueva detectada, ejecutando seeding inicial...');
+      await DatabaseSeeder.seedInitialData(em);
+    } else {
+      console.log('✅ Base de datos ya tiene datos, saltando seeding inicial');
+    }
 
-  const generator = orm.getSchemaGenerator();
-  await generator.updateSchema();
-
-  // inicia el servidor 
-  app.listen(3000, () => {
-    console.log('Server is running on port 3000');
-  });
+    // inicia el servidor 
+    app.listen(3000, () => {
+      console.log('🌐 Server is running on port 3000');
+      console.log('📊 Base de datos sincronizada y lista');
+    });
+    
+  } catch (error) {
+    console.error('❌ Error al iniciar la aplicación:', error);
+    process.exit(1);
+  }
 }
 
 
