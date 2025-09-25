@@ -33,6 +33,6 @@ export class Business {
   @Property({ default: false })
   active!: boolean;
 
-  @Property()
+  @Property({ nullable: true})
   activatedAt!: Date;
 }
