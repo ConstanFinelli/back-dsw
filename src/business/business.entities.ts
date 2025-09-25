@@ -29,4 +29,10 @@ export class Business {
 
   @OneToMany(() => Pitch, (pitch) => pitch.business)
   pitchs = new Collection<Pitch>(this); // añadida bidireccionalidad
+
+  @Property({ default: false })
+  active!: boolean;
+
+  @Property()
+  activatedAt!: Date;
 }
