@@ -10,22 +10,58 @@ const categoryRepository = new CategoryRepository();
 async function findAll(req: Request, res: Response): Promise<void> {
     try {
         const users = await userRepository.findAll();
-        res.send({ data: users });
+        
+        // Formatear la respuesta para excluir información sensible y mostrar categoryName
+        const usersResponse = users?.map(user => ({
+            id: user.id,
+            name: user.name,
+            surname: user.surname,
+            email: user.email,
+            phoneNumber: user.phoneNumber,
+            categoryName: user.category?.usertype || 'Unknown',
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+            // password se excluye intencionalmente
+        }));
+
+        res.json({ data: usersResponse });
     } catch (e) {
-        res.send({ message: e });
+        console.error('Error finding users:', e);
+        res.status(500).json({ message: "Internal server error" });
     }
 }
 
 async function findOne(req: Request, res: Response): Promise<void> {
     try {
-        const user = await userRepository.findOne(Number(req.params.id));
-        if (!user) {
-            res.status(404).send({ message: "User not found" });
+        const userId = Number(req.params.id);
+        
+        // Validar que el ID sea válido
+        if (isNaN(userId) || userId <= 0) {
+            res.status(400).json({ message: "Invalid user ID" });
             return;
         }
-        res.send({ data: user });
+
+        const user = await userRepository.findOne(userId);
+        if (!user) {
+            res.status(404).json({ message: "User not found" });
+            return;
+        }
+
+        // Excluir información sensible y formatear la respuesta
+        const userResponse = {
+            id: user.id,
+            name: user.name,
+            surname: user.surname,
+            email: user.email,
+            phoneNumber: user.phoneNumber,
+            categoryName: user.category?.usertype || 'Unknown', // Usar el nombre de la categoría
+            // password se excluye intencionalmente
+        };
+        
+        res.json({ data: userResponse });
     } catch (e) {
-        res.send({ message: e });
+        console.error('Error finding user:', e);
+        res.status(500).json({ message: "Internal server error" });
     }
 }
 
@@ -162,6 +198,10 @@ async function update(req: Request, res: Response): Promise<void> {
         if ('password' in updateData && (!updateData.password || !updateData.password.trim())) {
             validationErrors.push({ field: 'password', message: 'Password cannot be empty' });
         }
+        // Agregar validación para phoneNumber
+        if ('phoneNumber' in updateData && updateData.phoneNumber && typeof updateData.phoneNumber !== 'string') {
+            validationErrors.push({ field: 'phoneNumber', message: 'Phone number must be a string' });
+        }
 
         if (validationErrors.length > 0) {
             res.status(400).send({ 
@@ -171,8 +211,8 @@ async function update(req: Request, res: Response): Promise<void> {
             return;
         }
 
-        // Filtrar solo campos permitidos (whitelist)
-        const allowedFields = ['name', 'surname', 'email', 'password', 'category'];
+        // Filtrar solo campos permitidos (whitelist) - AGREGAR phoneNumber
+        const allowedFields = ['name', 'surname', 'email', 'password', 'category', 'phoneNumber'];
         const filteredUpdateData: any = {};
         
         allowedFields.forEach(field => {
