@@ -21,6 +21,22 @@ export class DatabaseSeeder {
         return;
       }
 
+      // Crear categoria cliente si no existe
+      let clientCategory = await em.findOne(Category, { usertype: 'client' });
+      if (!clientCategory) {
+        clientCategory = new Category('Categoría de cliente del sistema', 'client');
+        em.persist(clientCategory);
+        console.log('📁 Categoría cliente creada');
+      }
+
+      // Crear categoría dueño si no existe
+      let ownerCategory = await em.findOne(Category, { usertype: 'business_owner' });
+      if (!ownerCategory) {
+        ownerCategory = new Category('Categoría de dueño de negocio', 'business_owner');
+        em.persist(ownerCategory);
+        console.log('📁 Categoría dueño creada');
+      }
+
       // Crear categoría admin si no existe
       let adminCategory = await em.findOne(Category, { usertype: 'admin' });
       
