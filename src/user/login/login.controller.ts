@@ -1,10 +1,15 @@
 import { authenticateWithCategories, AuthenticatedRequest, createToken } from "../../middlewares/auth.middleware.js";
 import { UserRepository } from '../user.repository.js'
+import { Category } from "../../category/category.entities.js";
 import { NextFunction, Request, Response } from "express";
 import { User } from '../user.entities.js'
 import bcrypt from "bcryptjs";
+import { add } from "../user.controller.js";
+import { CategoryRepository } from "../../category/category.repository.js";
+import orm from "../../shared/db/orm.js";
 
 const repository = new UserRepository()
+const em = orm.em;
 
 export async function login(req:Request, res:Response){
     if(!req.body.email || !req.body.password){
@@ -29,4 +34,15 @@ export async function login(req:Request, res:Response){
     }
     const token = createToken(userFound) 
     res.status(201).send({token}) // crea y devuelve el token
+}
+
+export async function register(req:Request, res:Response){ // sin middleware
+    const catFound = await em.findOne(Category, {usertype: req.body.category});
+    if(catFound){
+        req.body.categoryId = catFound.id;
+        add(req, res)
+    }
+    else{
+        res.status(404).send({data:"Category not found"})
+    }
 }
