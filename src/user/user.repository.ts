@@ -22,7 +22,10 @@ export class UserRepository {
     }
 
     public async findOne(id: number): Promise<User | undefined> {
-        const user = await em.findOneOrFail(User, { id }, { populate: ['category'] });
+        const user = await em.findOneOrFail(User, { id }, { 
+            populate: ['category'],
+            fields: ['id', 'name', 'surname', 'email', 'phoneNumber', 'category', 'createdAt', 'updatedAt']
+        });
         return user as User;
     }
 

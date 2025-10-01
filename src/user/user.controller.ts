@@ -55,7 +55,8 @@ async function findOne(req: Request, res: Response): Promise<void> {
             email: user.email,
             phoneNumber: user.phoneNumber,
             categoryName: user.category?.usertype || 'Unknown', // Usar el nombre de la categoría
-            // password se excluye intencionalmente
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
         };
         
         res.json({ data: userResponse });
