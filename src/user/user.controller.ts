@@ -204,6 +204,23 @@ async function update(req: Request, res: Response): Promise<void> {
             validationErrors.push({ field: 'phoneNumber', message: 'Phone number must be a string' });
         }
 
+        // Validar categoryId si está presente
+        if ('categoryId' in updateData) {
+            if (!updateData.categoryId || isNaN(Number(updateData.categoryId))) {
+                validationErrors.push({ field: 'categoryId', message: 'Valid category ID is required' });
+            } else {
+                // Verificar que la categoría existe
+                const category = await categoryRepository.findOne(Number(updateData.categoryId));
+                if (!category) {
+                    validationErrors.push({ field: 'categoryId', message: 'Category not found' });
+                } else {
+                    // Convertir categoryId a la entidad Category
+                    updateData.category = category;
+                    delete updateData.categoryId; // Remover categoryId ya que usamos category
+                }
+            }
+        }
+
         if (validationErrors.length > 0) {
             res.status(400).send({ 
                 message: "Validation errors", 
@@ -212,7 +229,7 @@ async function update(req: Request, res: Response): Promise<void> {
             return;
         }
 
-        // Filtrar solo campos permitidos (whitelist) - AGREGAR phoneNumber
+        // Filtrar solo campos permitidos - CAMBIAR 'category' por 'categoryId' en el body
         const allowedFields = ['name', 'surname', 'email', 'password', 'category', 'phoneNumber'];
         const filteredUpdateData: any = {};
         
