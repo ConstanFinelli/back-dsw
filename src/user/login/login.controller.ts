@@ -24,12 +24,12 @@ export async function login(req:Request, res:Response){
 
     const userFound = await repository.findByEmail(toLog.email) // busca por email
     if(!userFound){
-        res.status(404).send({error:'User not found'})
+        res.status(404).send({message:'User not found'})
         return
     }
     const passwordOk = await bcrypt.compare(req.body.password, userFound.password) // compara las contraseñas hasheadas
     if(!passwordOk){
-        res.status(401).send({error:'Contraseña incorrecta'})
+        res.status(401).send({message:'Contraseña incorrecta'})
         return
     }
     const token = createToken(userFound) 
