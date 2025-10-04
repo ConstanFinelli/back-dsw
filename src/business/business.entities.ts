@@ -21,12 +21,11 @@ export class Business {
   @Property()
   address!: string;
 
-  @Property()
+  @Property({ type: 'decimal', precision: 3, scale: 2, columnType: 'decimal(3,2)' })
   averageRating!: number;
 
-  @Property()
-  reservationDepositPercentage  = new FloatType; // para registrarlo como float, si no lo redondea
-
+  @Property({ type: 'decimal', precision: 5, scale: 4, columnType: 'decimal(5,4)' })
+  reservationDepositPercentage!: number;
   @OneToMany(() => Pitch, (pitch) => pitch.business)
   pitchs = new Collection<Pitch>(this); // añadida bidireccionalidad
 

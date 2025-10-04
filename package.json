@@ -22,12 +22,16 @@
   "dependencies": {
     "@mikro-orm/core": "^6.4.16",
     "@mikro-orm/mysql": "^6.4.16",
+    "@types/multer": "^2.0.0",
     "bcryptjs": "^3.0.2",
+    "cloudinary": "^2.7.0",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^5.1.0",
     "express-validator": "^7.2.1",
+    "googleapis": "^161.0.0",
     "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
     "mysql2": "^3.14.3",
     "reflect-metadata": "^0.2.2"
   },
