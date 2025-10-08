@@ -21,29 +21,36 @@ export class DatabaseSeeder {
         return;
       }
 
-      // Crear categoria cliente si no existe
-      let clientCategory = await em.findOne(Category, { usertype: 'client' });
-      if (!clientCategory) {
-        clientCategory = new Category('Categoría de cliente del sistema', 'client');
-        em.persist(clientCategory);
-        console.log('📁 Categoría cliente creada');
-      }
+      // Crear las tres categorías necesarias si no existen
+      const categoriesToCreate = [
+        {
+          usertype: 'user',
+          description: 'Categoría de usuario cliente del sistema'
+        },
+        {
+          usertype: 'business_owner',
+          description: 'Categoría de dueño de negocio'
+        },
+        {
+          usertype: 'admin',
+          description: 'Categoría de administrador del sistema'
+        }
+      ];
 
-      // Crear categoría dueño si no existe
-      let ownerCategory = await em.findOne(Category, { usertype: 'business_owner' });
-      if (!ownerCategory) {
-        ownerCategory = new Category('Categoría de dueño de negocio', 'business_owner');
-        em.persist(ownerCategory);
-        console.log('📁 Categoría dueño creada');
-      }
+      const createdCategories: { [key: string]: Category } = {};
 
-      // Crear categoría admin si no existe
-      let adminCategory = await em.findOne(Category, { usertype: 'admin' });
-      
-      if (!adminCategory) {
-        adminCategory = new Category('Categoría de administrador del sistema', 'admin');
-        em.persist(adminCategory);
-        console.log('📁 Categoría admin creada');
+      for (const categoryData of categoriesToCreate) {
+        let category = await em.findOne(Category, { usertype: categoryData.usertype });
+        
+        if (!category) {
+          category = new Category(categoryData.description, categoryData.usertype);
+          em.persist(category);
+          console.log(`📁 Categoría ${categoryData.usertype} creada`);
+        } else {
+          console.log(`📁 Categoría ${categoryData.usertype} ya existe`);
+        }
+        
+        createdCategories[categoryData.usertype] = category;
       }
 
       // Crear usuario admin
@@ -54,7 +61,7 @@ export class DatabaseSeeder {
         surname: 'Sistema',
         email: 'admin@sistema.com',
         password: hashedPassword,
-        category: adminCategory,
+        category: createdCategories.admin,
         createdAt: new Date(),
         updatedAt: new Date()
       });
@@ -66,6 +73,7 @@ export class DatabaseSeeder {
       console.log('📧 Email: admin@sistema.com');
       console.log('🔑 Password: admin123');
       console.log('⚠️  IMPORTANTE: Cambia la contraseña después del primer login');
+      console.log('✅ Seeding completado exitosamente');
       
     } catch (error) {
       console.error('❌ Error durante el seeding inicial:', error);

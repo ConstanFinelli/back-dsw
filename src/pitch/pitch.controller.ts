@@ -76,12 +76,12 @@ async function update(req: Request, res: Response): Promise<void> {
         }
 
         const updatedData = {
-            rating: req.body.rating ? Number(req.body.rating) : pitchToUpdate.rating,
-            size: req.body.size?.trim() || pitchToUpdate.size,
-            groundType: req.body.groundType?.trim() || pitchToUpdate.groundType,
-            roof: req.body.roof ? (req.body.roof === 'true' || req.body.roof === true) : pitchToUpdate.roof,
-            price: req.body.price ? Number(req.body.price) : pitchToUpdate.price,
-            business: req.body.business ? Number(req.body.business) : pitchToUpdate.business,
+            rating: req.body.sanitizedInput?.rating ?? pitchToUpdate.rating,
+            size: req.body.sanitizedInput?.size ?? pitchToUpdate.size,
+            groundType: req.body.sanitizedInput?.groundType ?? pitchToUpdate.groundType,
+            roof: req.body.sanitizedInput?.roof ?? pitchToUpdate.roof,
+            price: req.body.sanitizedInput?.price ?? pitchToUpdate.price,
+            business: pitchToUpdate.business,
             imageUrl: imageUrl,
             driveFileId: driveFileId
         } as any;
