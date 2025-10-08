@@ -43,6 +43,6 @@ export async function register(req:Request, res:Response){ // sin middleware
         add(req, res)
     }
     else{
-        res.status(404).send({data:"Category not found"})
+        res.status(404).send({message:"Category not found"})
     }
 }
