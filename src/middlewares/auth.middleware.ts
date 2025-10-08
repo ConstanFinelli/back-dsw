@@ -16,7 +16,6 @@ export interface AuthenticatedRequest extends Request {
 export function authenticateWithCategories(allowedCategories: string[]) {
  
   return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
-    console.log('🚀 Executing auth middleware with categories:', allowedCategories); // ← Y ESTO
     
     const token = req.headers.authorization?.split(" ")[1];
     
