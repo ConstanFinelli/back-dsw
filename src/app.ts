@@ -25,13 +25,13 @@ app.use((req, res, next)=>{
 })
 
 
-app.use('/api/category', authenticateWithCategories(['admin']), categoryRouter);
-app.use('/api/coupons', authenticateWithCategories(['admin']), couponRouter);
-app.use('/api/localities', authenticateWithCategories(['admin']), localityRouter);
-app.use('/api/pitchs', authenticateWithCategories(['admin']), pitchRouter);
-app.use('/api/users', authenticateWithCategories(['admin']), userRouter);
-app.use('/api/business', authenticateWithCategories(['admin', 'business_owner']), businessRouter);
-app.use('/api/reservations', authenticateWithCategories(['admin', 'user', 'business_owner']), reservationRouter);
+app.use('/api/category', categoryRouter);
+app.use('/api/coupons', couponRouter);
+app.use('/api/localities', localityRouter);
+app.use('/api/pitchs', pitchRouter);
+app.use('/api/users', userRouter);
+app.use('/api/business', businessRouter);
+app.use('/api/reservations', reservationRouter);
 app.use('/api/login', loginRouter); // Login SIN protección
 
 // se asegura de la base de datos este creada, actualizada y levanta el servidor

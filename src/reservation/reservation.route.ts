@@ -1,15 +1,15 @@
 import { Router } from "express";
 import { findAll, findOne, add, remove, update, sanitizeReservationInput } from "./reservation.controller.js";
-
+import { authenticateWithCategories } from "../middlewares/auth.middleware.js";
 export const reservationRouter = Router(); // cambio de export y nombre de router para facilidad en app.ts
 
-reservationRouter.get("/", findAll);
+reservationRouter.get("/findAll", authenticateWithCategories(['admin', 'business_owner', 'user']), findAll);
 
-reservationRouter.get("/:id", findOne);
+reservationRouter.get("/findOne/:id", authenticateWithCategories(['admin', 'business_owner', 'user']), findOne);
 
-reservationRouter.post("/", sanitizeReservationInput, add);
+reservationRouter.post("/add", authenticateWithCategories(['admin', 'business_owner', 'user']), sanitizeReservationInput, add);
 
-reservationRouter.put("/:id", sanitizeReservationInput, update);
+reservationRouter.put("/update/:id", authenticateWithCategories(['admin']), sanitizeReservationInput, update);
 
-reservationRouter.delete("/:id", remove);
+reservationRouter.delete("/remove/:id", authenticateWithCategories(['admin', 'business_owner', 'user']), remove);
 

@@ -1,38 +1,40 @@
 import {Pitch} from './pitch.entities.js'
 import orm from '../shared/db/orm.js';
 
-const em = orm.em
-
 export class PitchRepository {
     public async findAll():Promise<Pitch[] | undefined>{
-            const pitchs = await em.find(Pitch, {}, {populate:['business', 'reservations']})
+        const em = orm.em.fork(); // ← AGREGAR fork()
+        const pitchs = await em.find(Pitch, {}, {populate:['business', 'reservations']})
+        return pitchs as Pitch[];
+    }
     
-            return pitchs as Pitch[];
-        }
-        public async findOne(id:number):Promise<Pitch | undefined>{
-            const pitch = await em.findOneOrFail(Pitch, {id})
+    public async findOne(id:number):Promise<Pitch | undefined>{
+        const em = orm.em.fork(); // ← AGREGAR fork()
+        const pitch = await em.findOneOrFail(Pitch, {id})
+        return pitch as Pitch
+    }
     
-            return pitch as Pitch
-        }
-        public async add(pitch:Pitch):Promise<Pitch | undefined>{
-            const pitchCreated = await em.create(Pitch, pitch)
-            await em.flush()
+    public async add(pitch:Pitch):Promise<Pitch | undefined>{
+        const em = orm.em.fork(); // ← AGREGAR fork()
+        const pitchCreated = await em.create(Pitch, pitch)
+        await em.flush()
+        return pitchCreated as Pitch
+    }
     
-            return pitchCreated as Pitch
-        }
-        
-        public async remove(id:number){
-            const removedPitch= await em.getReference(Pitch, id)
-            await em.removeAndFlush(removedPitch)
+    public async remove(id:number){
+        const em = orm.em.fork(); // ← AGREGAR fork()
+        const removedPitch= await em.getReference(Pitch, id)
+        await em.removeAndFlush(removedPitch)
+        return removedPitch as Pitch
+    }
     
-            return removedPitch as Pitch
-        }
-        public async update(id:number ,newPitch:Pitch){
-            const updatedPitch = await em.findOneOrFail(Pitch, {id})
-            em.assign(updatedPitch, newPitch)
-            await em.flush()
-    
-            return updatedPitch as Pitch
-        }
-    
+    public async update(id:number ,newPitch:Pitch){
+        const em = orm.em.fork(); // ← AGREGAR fork()
+        const updatedPitch = await em.findOneOrFail(Pitch, {id})
+        em.assign(updatedPitch, newPitch)
+        await em.flush()
+        return updatedPitch as Pitch
+    }
 }
+
+export const repository = new PitchRepository();
