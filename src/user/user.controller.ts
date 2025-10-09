@@ -3,7 +3,6 @@ import { UserRepository } from "./user.repository.js";
 import bcrypt from "bcryptjs";
 import { User } from "./user.entities.js";
 import { CategoryRepository } from "../category/category.repository.js";
-import { BusinessRepository } from "../business/business.repository.js";
 import { Business } from "../business/business.entities.js";
 import { orm } from "../shared/db/orm.js"
 
@@ -265,7 +264,6 @@ async function update(req: Request, res: Response): Promise<void> {
 }   
 
 async function hasBusiness(req: Request, res: Response): Promise<void>{
-    const businessRepository = new BusinessRepository()
     const owner = await userRepository.findOne(Number(req.params.id))
     if(owner){
         const business = await em.findOne(Business,{owner:owner})
@@ -274,9 +272,11 @@ async function hasBusiness(req: Request, res: Response): Promise<void>{
             return
         }else{
             res.send({response:false})
+            return
         }
     }else{
         res.status(404).send({error:'User not found'})
+        return
     }
 }
 

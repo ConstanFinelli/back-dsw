@@ -8,5 +8,5 @@ userRouter.post("/add", authenticateWithCategories(['admin', 'business_owner']),
 userRouter.get("/findOne/:id", authenticateWithCategories(['admin', 'business_owner']), findOne);
 userRouter.put("/update/:id", authenticateWithCategories(['admin', 'business_owner']), update);
 userRouter.delete("/delete/:id", authenticateWithCategories(['admin', 'business_owner']), deleteUser);
-userRouter.get("/hasBusiness/:id", hasBusiness);
+userRouter.get("/hasBusiness/:id", authenticateWithCategories(['admin', 'business_owner', 'user']), hasBusiness);
 
