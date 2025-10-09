@@ -1,11 +1,15 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, response, Response } from "express";
 import { UserRepository } from "./user.repository.js";
 import bcrypt from "bcryptjs";
 import { User } from "./user.entities.js";
 import { CategoryRepository } from "../category/category.repository.js";
+import { Business } from "../business/business.entities.js";
+import { orm } from "../shared/db/orm.js"
 
 const userRepository = new UserRepository();
 const categoryRepository = new CategoryRepository();
+
+const em = orm.em
 
 async function findAll(req: Request, res: Response): Promise<void> {
     try {
@@ -259,4 +263,21 @@ async function update(req: Request, res: Response): Promise<void> {
     }
 }   
 
-export { findAll, findOne, deleteUser, update, add };
+async function hasBusiness(req: Request, res: Response): Promise<void>{
+    const owner = await userRepository.findOne(Number(req.params.id))
+    if(owner){
+        const business = await em.findOne(Business,{owner:owner})
+        if(business){
+            res.send({response:true})
+            return
+        }else{
+            res.send({response:false})
+            return
+        }
+    }else{
+        res.status(404).send({error:'User not found'})
+        return
+    }
+}
+
+export { findAll, findOne, deleteUser, update, add, hasBusiness };
