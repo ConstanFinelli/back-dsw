@@ -40,7 +40,9 @@ export class BusinessRepository {
         business.address = newBusiness.address || business.address;
         business.averageRating = newBusiness.averageRating || business.averageRating;
         business.reservationDepositPercentage = newBusiness.reservationDepositPercentage || business.reservationDepositPercentage;
-
+        business.openingAt = newBusiness.openingAt || business.openingAt;
+        business.closingAt = newBusiness.closingAt || business.closingAt;
+        
         await em.flush();
         return business;
     }

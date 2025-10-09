@@ -34,4 +34,10 @@ export class Business {
 
   @Property({ nullable: true})
   activatedAt!: Date;
+
+  @Property({ columnType: 'time' })
+  openingAt!: String;
+
+  @Property({ columnType: 'time' })
+  closingAt!: String;
 }
