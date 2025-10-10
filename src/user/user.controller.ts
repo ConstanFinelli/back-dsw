@@ -5,6 +5,7 @@ import { User } from "./user.entities.js";
 import { CategoryRepository } from "../category/category.repository.js";
 import { Business } from "../business/business.entities.js";
 import { orm } from "../shared/db/orm.js"
+import { Category } from "../category/category.entities.js";
 
 const userRepository = new UserRepository();
 const categoryRepository = new CategoryRepository();
@@ -280,4 +281,35 @@ async function hasBusiness(req: Request, res: Response): Promise<void>{
     }
 }
 
-export { findAll, findOne, deleteUser, update, add, hasBusiness };
+async function promoteToBusinessOwner(req: Request, res: Response) {
+    try {
+        const oId = Number(req.params.id);
+        if (!oId) {
+            res.status(400).send({ message: "User ID is required for promotion" });
+            return;
+        }
+        const owner = await userRepository.findOne(oId) as User
+        if(!owner){
+            res.status(404).send({ message: "User not found" });
+            return;
+        }
+        const ownerCat = await em.findOne(Category,{usertype: 'business_owner'}) as Category;
+        if(ownerCat){
+            owner.category = ownerCat;
+        }else{
+            res.status(404).send({ message: "Business owner category not found" });
+            return;
+        }
+        const updatedBusiness = await userRepository.update(owner);
+        if (!updatedBusiness) {
+            res.status(404).send({ message: "Business not found" });
+            return;
+        }
+        
+        res.send({ message: "Business activated successfully", data: updatedBusiness });
+    } catch (e) {
+        res.status(500).send({ message: e });
+    }
+}
+
+export { findAll, findOne, deleteUser, update, add, hasBusiness, promoteToBusinessOwner };

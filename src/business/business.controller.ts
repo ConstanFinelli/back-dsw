@@ -85,10 +85,55 @@ async function remove(req: Request, res: Response) {
     }
 }
 
+async function findInactive(req: Request, res: Response) {
+    try {
+        const businesses = await businessRepository.findAll();
+        if (!businesses) {
+            res.status(404).send({ message: "There are no businesses" });
+            return;
+        }
+        const inactive = businesses.filter((business) => !business.active);
+        if (inactive.length === 0) {
+            res.status(404).send({ message: "There are no inactive businesses" });
+            return;
+        }
+        res.send({ data: inactive });
+    } catch (e) {
+        res.status(500).send({ message: e });
+    }
+}
+
+async function activate(req: Request, res: Response) {
+    try {
+        const bId = Number(req.params.id);
+        if (!bId) {
+            res.status(400).send({ message: "Business ID is required for activate" });
+            return;
+        }
+        const business = await businessRepository.findOne(bId)
+        if(!business){
+            res.status(404).send({ message: "Business not found" });
+            return;
+        }
+        business.active = true;
+        const updatedBusiness = await businessRepository.update(business);
+        if (!updatedBusiness) {
+            res.status(404).send({ message: "Business not found" });
+            return;
+        }
+        
+        res.send({ message: "Business activated successfully", data: updatedBusiness });
+    } catch (e) {
+        res.status(500).send({ message: e });
+    }
+}
+
 export {
     findAll,
     findOne,
     add,
     update,
-    remove
+    remove,
+    findInactive,
+    activate
 };
