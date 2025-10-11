@@ -2,8 +2,12 @@ import { Request, Response, NextFunction } from 'express';
 import { Pitch } from './pitch.entities.js';
 import { PitchRepository } from './pitch.repository.js';
 import { cloudinaryService } from '../services/imageService.js';
+import orm from '../shared/db/orm.js';
+import { Business } from '../business/business.entities.js';
 
 const repository = new PitchRepository();
+
+const em = orm.em
 
 async function add(req: Request, res: Response): Promise<void> {
     try {
@@ -17,7 +21,11 @@ async function add(req: Request, res: Response): Promise<void> {
             res.status(400).json({ error: 'Business is required' });
             return;
         }
-
+        const businessExists = await em.findOne(Business, {id:business})
+        if(!businessExists){
+            res.status(400).json({ error: 'Non-existent Business' });
+            return;
+        }
         // Procesar imagen...
         const files = req.files as { [fieldname: string]: Express.Multer.File[] };
         const imageFile = files && files['image'] ? files['image'][0] : null;
@@ -158,11 +166,11 @@ function sanitizePitchInput(req: Request, res: Response, next: NextFunction) {
         // Size: valores permitidos
         if (req.body.size) {
             const size = req.body.size.trim().toLowerCase();
-            const validSizes = ['pequeño', 'mediano', 'grande'];
+            const validSizes = ['5v5', '7v7', '11v11'];
             if (validSizes.includes(size)) {
                 sanitized.size = size;
             } else {
-                res.status(400).json({ error: 'Invalid size. Must be: pequeño, mediano, grande' });
+                res.status(400).json({ error: 'Invalid size. Must be: 5v5, 7v7, 11v11' });
                 return;
             }
         }
