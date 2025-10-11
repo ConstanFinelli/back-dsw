@@ -158,11 +158,11 @@ function sanitizePitchInput(req: Request, res: Response, next: NextFunction) {
         // Size: valores permitidos
         if (req.body.size) {
             const size = req.body.size.trim().toLowerCase();
-            const validSizes = ['pequeño', 'mediano', 'grande'];
+            const validSizes = ['5v5', '7v7', '11v11'];
             if (validSizes.includes(size)) {
                 sanitized.size = size;
             } else {
-                res.status(400).json({ error: 'Invalid size. Must be: pequeño, mediano, grande' });
+                res.status(400).json({ error: 'Invalid size. Must be: 5v5, 7v7, 11v11' });
                 return;
             }
         }
