@@ -110,19 +110,27 @@ async function activate(req: Request, res: Response) {
             res.status(400).send({ message: "Business ID is required for activate" });
             return;
         }
-        const business = await businessRepository.findOne(bId)
-        if(!business){
+        
+        const business = await businessRepository.findOne(bId);
+        if (!business) {
             res.status(404).send({ message: "Business not found" });
             return;
         }
+        
+        // ✅ Actualizar ambos campos
         business.active = true;
+        business.activatedAt = new Date(); // ← AGREGAR ESTA LÍNEA
+        
         const updatedBusiness = await businessRepository.update(business);
         if (!updatedBusiness) {
             res.status(404).send({ message: "Business not found" });
             return;
         }
         
-        res.send({ message: "Business activated successfully", data: updatedBusiness });
+        res.send({ 
+            message: "Business activated successfully", 
+            data: updatedBusiness 
+        });
     } catch (e) {
         res.status(500).send({ message: e });
     }
