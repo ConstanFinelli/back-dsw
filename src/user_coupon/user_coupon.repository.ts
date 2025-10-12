@@ -1,7 +1,7 @@
-import { UserCoupon } from './user_coupon.entities';
-import { User } from '../user/user.entities';
-import { Coupon } from '../coupon/coupon.entities';
-import orm from '../shared/db/orm';
+import { UserCoupon } from './user_coupon.entities.js';
+import { User } from '../user/user.entities.js';
+import { Coupon } from '../coupon/coupon.entities.js';
+import orm from '../shared/db/orm.js';
 
 const em = orm.em;
 

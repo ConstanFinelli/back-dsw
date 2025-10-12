@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response, RequestHandler } from "express";
-import { UserCouponRepository } from "./user_coupon.repository";
+import { UserCouponRepository } from "./user_coupon.repository.js";
 
 const repository = new UserCouponRepository();
 
