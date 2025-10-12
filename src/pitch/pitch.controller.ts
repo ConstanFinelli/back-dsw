@@ -7,7 +7,7 @@ import { Business } from '../business/business.entities.js';
 
 const repository = new PitchRepository();
 
-const em = orm.em
+const em = orm.em.fork()
 
 async function add(req: Request, res: Response): Promise<void> {
     try {

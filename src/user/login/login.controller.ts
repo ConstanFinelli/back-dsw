@@ -9,7 +9,7 @@ import { CategoryRepository } from "../../category/category.repository.js";
 import orm from "../../shared/db/orm.js";
 
 const repository = new UserRepository()
-const em = orm.em;
+const em = orm.em.fork()
 
 export async function login(req:Request, res:Response){
     if(!req.body.email || !req.body.password){
