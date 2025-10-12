@@ -35,7 +35,8 @@ async function add(req: Request, res: Response) {
         if (!business.address) missingFields.push('address');
         if (business.averageRating === undefined) missingFields.push('averageRating');
         if (business.reservationDepositPercentage === undefined) missingFields.push('reservationDepositPercentage');
-        if (!business.owner || !business.locality) missingFields.push('owner or locality');
+        if (!business.owner) missingFields.push('owner');
+        if (!business.locality) missingFields.push('locality');
 
         if (missingFields.length > 0) {
             res.status(400).send({ 
@@ -44,11 +45,25 @@ async function add(req: Request, res: Response) {
             });
             return;
         }
+
+        // Validar que owner y locality sean números o tengan id
+        if (typeof business.owner === 'object' && !business.owner.id) {
+            res.status(400).send({ message: "owner must have an id" });
+            return;
+        }
+        if (typeof business.locality === 'object' && !business.locality.id) {
+            res.status(400).send({ message: "locality must have an id" });
+            return;
+        }
         
         const newBusiness = await businessRepository.add(business);
         res.status(201).send({ message: "Business created successfully", data: newBusiness });
-    } catch (e) {
-        res.status(500).send({ message: e });
+    } catch (e: any) {
+        console.error('Error creating business:', e);
+        res.status(500).send({ 
+            message: "Error creating business", 
+            error: e.message || e 
+        });
     }
 }
 

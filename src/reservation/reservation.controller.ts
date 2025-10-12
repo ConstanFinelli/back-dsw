@@ -52,9 +52,28 @@ async function update(req: Request, res: Response) {
 }
 
 function sanitizeReservationInput(req: Request, res: Response, next: NextFunction) {
+  // Convertir fechas de string a Date si es necesario
+  let reservationDate = req.body.ReservationDate;
+  let reservationTime = req.body.ReservationTime;
+
+  // Si viene como string, crear Date en zona horaria local
+  if (typeof reservationDate === 'string') {
+    // Si viene en formato ISO (YYYY-MM-DD), crear fecha local sin conversión UTC
+    const dateMatch = reservationDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (dateMatch) {
+      reservationDate = new Date(parseInt(dateMatch[1]), parseInt(dateMatch[2]) - 1, parseInt(dateMatch[3]));
+    } else {
+      reservationDate = new Date(reservationDate);
+    }
+  }
+
+  if (typeof reservationTime === 'string') {
+    reservationTime = new Date(reservationTime);
+  }
+
   req.body.sanitizedInput = {
-    ReservationDate: req.body.ReservationDate, 
-    ReservationTime: req.body.ReservationTime, 
+    ReservationDate: reservationDate, 
+    ReservationTime: reservationTime, 
     pitch: req.body.pitch, 
     user: req.body.user    
   };

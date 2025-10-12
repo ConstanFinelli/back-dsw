@@ -1,6 +1,9 @@
 import { EntityManager } from '@mikro-orm/core';
 import { User } from '../../user/user.entities.js';
 import { Category } from '../../category/category.entities.js';
+import { Locality } from '../../locality/locality.entities.js';
+import { Business } from '../../business/business.entities.js';
+import { Pitch } from '../../pitch/pitch.entities.js';
 import bcrypt from 'bcryptjs';
 
 export class DatabaseSeeder {

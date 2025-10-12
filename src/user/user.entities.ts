@@ -2,6 +2,7 @@ import { Rel, Collection, Entity, ManyToOne, OneToMany, OneToOne, PrimaryKey, Pr
 import { Category } from "../category/category.entities.js";
 import { Business } from "../business/business.entities.js";
 import { Reservation } from "../reservation/reservation.entities.js";
+import type { UserCoupon } from "../user_coupon/user_coupon.entities.js";
 
 @Entity()
 export class User {
@@ -36,4 +37,8 @@ export class User {
 
   @OneToMany(()=> Reservation, (reservation) => reservation.user)
   reservations = new Collection<Reservation>(this); // añadida bidireccionalidad
+
+  // Relación con cupones a través de tabla intermedia
+  @OneToMany(() => 'UserCoupon', (userCoupon: UserCoupon) => userCoupon.user)
+  userCoupons = new Collection<UserCoupon>(this);
 }

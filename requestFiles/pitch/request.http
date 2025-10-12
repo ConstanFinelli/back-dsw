@@ -1,0 +1,65 @@
+### Variables
+@baseUrl = http://localhost:3000/api
+@token = YOUR_JWT_TOKEN_HERE
+
+### GET All Pitches (Canchas)
+GET {{baseUrl}}/pitchs/getAll
+
+### GET One Pitch by ID
+GET {{baseUrl}}/pitchs/getOne/1
+
+### POST - Add New Pitch (requiere autenticación admin o business_owner)
+# Nota: Para enviar con imagen, usar form-data en Postman/Insomnia
+POST {{baseUrl}}/pitchs/add
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="rating"
+
+5
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="size"
+
+mediano
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="groundType"
+
+césped sintético
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="roof"
+
+true
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="price"
+
+5000
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="business"
+
+1
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="image"; filename="cancha.jpg"
+Content-Type: image/jpeg
+
+< ./cancha.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### PATCH - Update Pitch (requiere autenticación admin o business_owner)
+PATCH {{baseUrl}}/pitchs/update/1
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="rating"
+
+4
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="price"
+
+6000
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### DELETE - Remove Pitch (requiere autenticación admin o business_owner)
+DELETE {{baseUrl}}/pitchs/remove/1
+Authorization: Bearer {{token}}

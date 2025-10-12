@@ -11,3 +11,4 @@ userRouter.put("/promoteToBusinessOwner/:id", authenticateWithCategories(['admin
 userRouter.delete("/delete/:id", authenticateWithCategories(['admin', 'business_owner']), deleteUser);
 userRouter.get("/hasBusiness/:id", authenticateWithCategories(['admin', 'business_owner', 'user']), hasBusiness);
 
+

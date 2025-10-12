@@ -9,6 +9,7 @@ import { userRouter } from './user/user.route.js';
 import { businessRouter } from './business/business.route.js';
 import { reservationRouter } from './reservation/reservation.route.js';
 import { loginRouter } from './user/login/login.route.js';
+import { userCouponRouter } from './user_coupon/user_coupon.route.js';
 import cors from "cors";
 
 import orm from './shared/db/orm.js';
@@ -33,6 +34,7 @@ app.use('/api/users', userRouter);
 app.use('/api/business', businessRouter);
 app.use('/api/reservations', reservationRouter);
 app.use('/api/login', loginRouter); // Login SIN protección
+app.use('/api/user-coupons', userCouponRouter); // Gestión de cupones asignados a usuarios
 
 // se asegura de la base de datos este creada, actualizada y levanta el servidor
 

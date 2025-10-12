@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Canchas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        #response {
+            margin-top: 20px;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #00ff00;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .pitches-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .pitch-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .pitch-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+
+        .pitch-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .pitch-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .pitch-info {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            color: #666;
+        }
+
+        .pitch-info strong {
+            color: #333;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .token-display {
+            background: #fff3cd;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 12px;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏟️ Test API de Canchas</h1>
+
+        <!-- Login Section -->
+        <div class="section">
+            <h2>🔐 1. Login</h2>
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" id="loginEmail" value="admin@sistema.com">
+            </div>
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" id="loginPassword" value="admin123">
+            </div>
+            <button onclick="login()">Login</button>
+            <div id="tokenDisplay" class="token-display" style="display: none;">
+                <strong>Token:</strong> <span id="tokenText"></span>
+            </div>
+        </div>
+
+        <!-- Get All Pitches -->
+        <div class="section">
+            <h2>📋 2. Obtener Todas las Canchas</h2>
+            <button onclick="getAllPitches()">Obtener Canchas</button>
+            <div id="pitchesList" class="pitches-grid"></div>
+        </div>
+
+        <!-- Get One Pitch -->
+        <div class="section">
+            <h2>🔍 3. Obtener Una Cancha</h2>
+            <div class="form-group">
+                <label>ID de la Cancha:</label>
+                <input type="number" id="getPitchId" value="1">
+            </div>
+            <button onclick="getPitchById()">Obtener Cancha</button>
+        </div>
+
+        <!-- Create Pitch -->
+        <div class="section">
+            <h2>➕ 4. Crear Nueva Cancha</h2>
+            <div class="form-group">
+                <label>Rating (1-5):</label>
+                <input type="number" id="createRating" min="1" max="5" value="5">
+            </div>
+            <div class="form-group">
+                <label>Tamaño:</label>
+                <select id="createSize">
+                    <option value="pequeño">Pequeño</option>
+                    <option value="mediano" selected>Mediano</option>
+                    <option value="grande">Grande</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Tipo de Superficie:</label>
+                <select id="createGroundType">
+                    <option value="césped natural">Césped Natural</option>
+                    <option value="césped sintético" selected>Césped Sintético</option>
+                    <option value="cemento">Cemento</option>
+                    <option value="arcilla">Arcilla</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>¿Tiene Techo?</label>
+                <select id="createRoof">
+                    <option value="true" selected>Sí</option>
+                    <option value="false">No</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Precio:</label>
+                <input type="number" id="createPrice" value="5000">
+            </div>
+            <div class="form-group">
+                <label>ID del Negocio:</label>
+                <input type="number" id="createBusiness" value="1">
+            </div>
+            <div class="form-group">
+                <label>Imagen (opcional):</label>
+                <input type="file" id="createImage" accept="image/*">
+            </div>
+            <button onclick="createPitch()">Crear Cancha</button>
+        </div>
+
+        <!-- Update Pitch -->
+        <div class="section">
+            <h2>✏️ 5. Actualizar Cancha</h2>
+            <div class="form-group">
+                <label>ID de la Cancha:</label>
+                <input type="number" id="updateId" value="1">
+            </div>
+            <div class="form-group">
+                <label>Nuevo Rating (opcional):</label>
+                <input type="number" id="updateRating" min="1" max="5" placeholder="Dejar vacío para no cambiar">
+            </div>
+            <div class="form-group">
+                <label>Nuevo Precio (opcional):</label>
+                <input type="number" id="updatePrice" placeholder="Dejar vacío para no cambiar">
+            </div>
+            <div class="form-group">
+                <label>Nueva Imagen (opcional):</label>
+                <input type="file" id="updateImage" accept="image/*">
+            </div>
+            <button onclick="updatePitch()">Actualizar Cancha</button>
+        </div>
+
+        <!-- Delete Pitch -->
+        <div class="section">
+            <h2>🗑️ 6. Eliminar Cancha</h2>
+            <div class="form-group">
+                <label>ID de la Cancha:</label>
+                <input type="number" id="deleteId" value="1">
+            </div>
+            <button class="btn-danger" onclick="deletePitch()">Eliminar Cancha</button>
+        </div>
+
+        <!-- Response Display -->
+        <div class="section">
+            <h2>📤 Respuesta del Servidor</h2>
+            <div id="response">Esperando petición...</div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:3000/api';
+        let authToken = '';
+
+        function displayResponse(data, status) {
+            const responseDiv = document.getElementById('response');
+            const statusClass = status >= 200 && status < 300 ? 'success' : 'error';
+            responseDiv.innerHTML = `<span class="status ${statusClass}">Status: ${status}</span>\n\n${JSON.stringify(data, null, 2)}`;
+        }
+
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch(`${BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                displayResponse(data, response.status);
+
+                if (response.ok && data.token) {
+                    authToken = data.token;
+                    document.getElementById('tokenDisplay').style.display = 'block';
+                    document.getElementById('tokenText').textContent = authToken.substring(0, 50) + '...';
+                }
+            } catch (error) {
+                displayResponse({ error: error.message }, 500);
+            }
+        }
+
+        async function getAllPitches() {
+            try {
+                const response = await fetch(`${BASE_URL}/pitchs/getAll`);
+                const data = await response.json();
+                displayResponse(data, response.status);
+
+                if (response.ok && data.data) {
+                    displayPitchesList(data.data);
+                }
+            } catch (error) {
+                displayResponse({ error: error.message }, 500);
+            }
+        }
+
+        function displayPitchesList(pitches) {
+            const listDiv = document.getElementById('pitchesList');
+            if (pitches.length === 0) {
+                listDiv.innerHTML = '<p>No hay canchas disponibles</p>';
+                return;
+            }
+
+            listDiv.innerHTML = pitches.map(pitch => `
+                <div class="pitch-card">
+                    ${pitch.imageUrl ? `<img src="${pitch.imageUrl}" alt="Cancha ${pitch.id}">` : ''}
+                    <h3>Cancha #${pitch.id}</h3>
+                    <div class="pitch-info">
+                        <span><strong>Rating:</strong> ${'⭐'.repeat(pitch.rating)}</span>
+                    </div>
+                    <div class="pitch-info">
+                        <span><strong>Tamaño:</strong> ${pitch.size}</span>
+                    </div>
+                    <div class="pitch-info">
+                        <span><strong>Superficie:</strong> ${pitch.groundType}</span>
+                    </div>
+                    <div class="pitch-info">
+                        <span><strong>Techo:</strong> ${pitch.roof ? 'Sí' : 'No'}</span>
+                    </div>
+                    <div class="pitch-info">
+                        <span><strong>Precio:</strong> $${pitch.price}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function getPitchById() {
+            const id = document.getElementById('getPitchId').value;
+
+            try {
+                const response = await fetch(`${BASE_URL}/pitchs/getOne/${id}`);
+                const data = await response.json();
+                displayResponse(data, response.status);
+            } catch (error) {
+                displayResponse({ error: error.message }, 500);
+            }
+        }
+
+        async function createPitch() {
+            if (!authToken) {
+                alert('Por favor, haz login primero');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('rating', document.getElementById('createRating').value);
+            formData.append('size', document.getElementById('createSize').value);
+            formData.append('groundType', document.getElementById('createGroundType').value);
+            formData.append('roof', document.getElementById('createRoof').value);
+            formData.append('price', document.getElementById('createPrice').value);
+            formData.append('business', document.getElementById('createBusiness').value);
+
+            const imageFile = document.getElementById('createImage').files[0];
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+
+            try {
+                const response = await fetch(`${BASE_URL}/pitchs/add`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` },
+                    body: formData
+                });
+
+                const data = await response.json();
+                displayResponse(data, response.status);
+            } catch (error) {
+                displayResponse({ error: error.message }, 500);
+            }
+        }
+
+        async function updatePitch() {
+            if (!authToken) {
+                alert('Por favor, haz login primero');
+                return;
+            }
+
+            const id = document.getElementById('updateId').value;
+            const formData = new FormData();
+
+            const rating = document.getElementById('updateRating').value;
+            const price = document.getElementById('updatePrice').value;
+
+            if (rating) formData.append('rating', rating);
+            if (price) formData.append('price', price);
+
+            const imageFile = document.getElementById('updateImage').files[0];
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+
+            try {
+                const response = await fetch(`${BASE_URL}/pitchs/update/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `Bearer ${authToken}` },
+                    body: formData
+                });
+
+                const data = await response.json();
+                displayResponse(data, response.status);
+            } catch (error) {
+                displayResponse({ error: error.message }, 500);
+            }
+        }
+
+        async function deletePitch() {
+            if (!authToken) {
+                alert('Por favor, haz login primero');
+                return;
+            }
+
+            const id = document.getElementById('deleteId').value;
+
+            if (!confirm(`¿Estás seguro de eliminar la cancha #${id}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BASE_URL}/pitchs/remove/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const data = await response.json();
+                displayResponse(data, response.status);
+            } catch (error) {
+                displayResponse({ error: error.message }, 500);
+            }
+        }
+    </script>
+</body>
+</html>
