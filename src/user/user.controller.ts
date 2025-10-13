@@ -10,7 +10,7 @@ import { Category } from "../category/category.entities.js";
 const userRepository = new UserRepository();
 const categoryRepository = new CategoryRepository();
 
-const em = orm.em
+const em = orm.em.fork()
 
 async function findAll(req: Request, res: Response): Promise<void> {
     try {
