@@ -40,7 +40,7 @@ app.use('/api/user-coupons', userCouponRouter); // Gestión de cupones asignados
 
 async function start() {
   try {
-    console.log('🚀 Iniciando aplicación...');
+    console.log('Iniciando aplicación...');
 
     const generator = orm.getSchemaGenerator();
     
@@ -50,26 +50,26 @@ async function start() {
     // Verificar si necesitamos hacer seeding inicial antes de actualizar el esquema
     const needsSeeding = await DatabaseSeeder.needsInitialSeeding(em);
     
-    console.log('🗃️  Actualizando esquema de base de datos...');
+    console.log('Actualizando esquema de base de datos...');
     await generator.updateSchema();
     
     // Si necesitaba seeding y acabamos de actualizar el esquema, 
     // es muy probable que las tablas se hayan creado ahora
     if (needsSeeding) {
-      console.log('🌱 Base de datos nueva detectada, ejecutando seeding inicial...');
+      console.log('Base de datos nueva detectada, ejecutando seeding inicial...');
       await DatabaseSeeder.seedInitialData(em);
     } else {
-      console.log('✅ Base de datos ya tiene datos, saltando seeding inicial');
+      console.log('Base de datos ya tiene datos, saltando seeding inicial');
     }
 
     // inicia el servidor 
     app.listen(3000, () => {
-      console.log('🌐 Server is running on port 3000');
-      console.log('📊 Base de datos sincronizada y lista');
+      console.log('Server is running on port 3000');
+      console.log('Base de datos sincronizada y lista');
     });
     
   } catch (error) {
-    console.error('❌ Error al iniciar la aplicación:', error);
+    console.error('Error al iniciar la aplicación:', error);
     process.exit(1);
   }
 }

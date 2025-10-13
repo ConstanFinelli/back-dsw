@@ -5,7 +5,7 @@ import { authenticateWithCategories } from '../middlewares/auth.middleware.js';
 
 export const pitchRouter = Router();
 
-// Rutas limpias usando el middleware
+// Rutas
 pitchRouter.get('/getAll', findAll);
 pitchRouter.get('/getByBusiness/:businessId', authenticateWithCategories(['business_owner']), findByBusinessId);
 pitchRouter.get('/getOne/:id', findOne);

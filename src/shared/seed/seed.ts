@@ -13,14 +13,14 @@ export class DatabaseSeeder {
    * Este método solo debe ejecutarse cuando se crea la base de datos por primera vez
    */
   static async seedInitialData(em: EntityManager): Promise<void> {
-    console.log('🌱 Iniciando seeding de la base de datos...');
+    console.log('Iniciando seeding de la base de datos...');
 
     try {
       // Verificar si ya existe algún usuario admin para evitar duplicados
       const existingAdmin = await em.findOne(User, { email: 'admin@sistema.com' });
       
       if (existingAdmin) {
-        console.log('✅ Usuario admin ya existe, saltando seeding inicial');
+        console.log('Usuario admin ya existe, saltando seeding inicial');
         return;
       }
 
@@ -48,9 +48,9 @@ export class DatabaseSeeder {
         if (!category) {
           category = new Category(categoryData.description, categoryData.usertype);
           em.persist(category);
-          console.log(`📁 Categoría ${categoryData.usertype} creada`);
+          console.log(`Categoría ${categoryData.usertype} creada`);
         } else {
-          console.log(`📁 Categoría ${categoryData.usertype} ya existe`);
+          console.log(`Categoría ${categoryData.usertype} ya existe`);
         }
         
         createdCategories[categoryData.usertype] = category;
@@ -72,14 +72,14 @@ export class DatabaseSeeder {
       em.persist(adminUser);
       await em.flush();
 
-      console.log('👤 Usuario admin creado exitosamente');
-      console.log('📧 Email: admin@sistema.com');
-      console.log('🔑 Password: admin123');
-      console.log('⚠️  IMPORTANTE: Cambia la contraseña después del primer login');
-      console.log('✅ Seeding completado exitosamente');
+      console.log('Usuario admin creado exitosamente');
+      console.log('Email: admin@sistema.com');
+      console.log('Password: admin123');
+      console.log('IMPORTANTE: Cambia la contraseña después del primer login');
+      console.log('Seeding completado exitosamente');
       
     } catch (error) {
-      console.error('❌ Error durante el seeding inicial:', error);
+      console.error('Error durante el seeding inicial:', error);
       throw error;
     }
   }

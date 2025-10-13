@@ -22,7 +22,7 @@ async function add(req: Request, res: Response): Promise<void> {
             return;
         }
         
-        // ✅ USAR FORK() AQUÍ:
+
         const em = orm.em.fork();
         const businessExists = await em.findOne(Business, {id: business});
         
@@ -43,7 +43,7 @@ async function add(req: Request, res: Response): Promise<void> {
             driveFileId = uploadResult.fileId;
         }
 
-        // ✅ Usar datos ya sanitizados
+
         const pitchData = {
             ...req.body.sanitizedInput,
             imageUrl,
@@ -176,7 +176,7 @@ async function findOne(req: Request, res: Response): Promise<void> {
 
 function sanitizePitchInput(req: Request, res: Response, next: NextFunction) {
     try {
-        // ✅ Limpiar y validar datos
+        // Limpiar y validar datos
         const sanitized: any = {};
 
         // Rating: 1-5

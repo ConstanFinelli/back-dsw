@@ -28,14 +28,14 @@ export class Pitch{
     @ManyToOne(() => Business, {nullable: false})
     business!: Rel<Business>;
 
-    // AGREGAR estos campos para imágenes:
+    // campos para imágenes:
     @Property({ nullable: true })
-    imageUrl?: string;          // URL pública de Google Drive
+    imageUrl?: string;          // URL pública 
 
     @Property({ nullable: true })
-    driveFileId?: string;       // ID del archivo en Drive (para eliminar)
+    driveFileId?: string;       // ID del archivo 
 
-    // También asegúrate de tener estos (si no los tienes):
+
     @Property({ onCreate: () => new Date() })
     createdAt!: Date;
 
