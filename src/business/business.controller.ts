@@ -118,6 +118,28 @@ async function findInactive(req: Request, res: Response) {
     }
 }
 
+async function findBusinessByOwnerId(req: Request, res: Response): Promise<void> {
+    try {
+        const ownerId = Number(req.params.ownerId);
+        
+        if (!ownerId) {
+            res.status(400).json({ error: 'Owner ID is required' });
+            return;
+        }
+        
+        const businesses = await businessRepository.findBusinessByOwnerId(ownerId);
+        
+        if (!businesses) {
+            res.status(404).json({ error: 'No businesses found for this owner' });
+            return;
+        }
+        
+        res.status(200).json({ data: businesses });
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+}
+
 async function activate(req: Request, res: Response) {
     try {
         const bId = Number(req.params.id);
@@ -158,5 +180,6 @@ export {
     update,
     remove,
     findInactive,
-    activate
+    activate,
+    findBusinessByOwnerId
 };

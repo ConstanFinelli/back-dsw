@@ -7,6 +7,12 @@ export class PitchRepository {
         const pitchs = await em.find(Pitch, {}, {populate:['business', 'reservations']})
         return pitchs as Pitch[];
     }
+
+    public async findByBusinessId(businessId:number):Promise<Pitch[] | undefined>{
+        const em = orm.em.fork(); 
+        const pitchs = await em.find(Pitch, {business: businessId}, {populate:['business', 'reservations']})
+        return pitchs as Pitch[];
+    }
     
     public async findOne(id:number):Promise<Pitch | undefined>{
         const em = orm.em.fork(); // ← AGREGAR fork()

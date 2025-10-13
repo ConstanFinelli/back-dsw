@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticateWithCategories } from "../middlewares/auth.middleware.js";
-import { findAll, add, findOne, update, remove, findInactive, activate} from "./business.controller.js";
+import { findAll, add, findOne, update, remove, findInactive, activate, findBusinessByOwnerId} from "./business.controller.js";
 
 export const businessRouter = Router();
 
@@ -11,5 +11,4 @@ businessRouter.post("/add", authenticateWithCategories(['admin', 'business_owner
 businessRouter.put("/update/:id", authenticateWithCategories(['admin', 'business_owner']), update);
 businessRouter.put("/activate/:id", activate);
 businessRouter.delete("/remove/:id", authenticateWithCategories(['admin', 'business_owner']), remove);
-
-
+businessRouter.get("/findByOwnerId/:ownerId", authenticateWithCategories(['admin', 'business_owner']), findBusinessByOwnerId);
