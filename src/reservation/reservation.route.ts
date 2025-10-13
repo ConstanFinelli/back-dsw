@@ -1,9 +1,11 @@
 import { Router } from "express";
-import { findAll, findOne, add, remove, update, sanitizeReservationInput } from "./reservation.controller.js";
+import { findAll, findAllFromUser, findOne, add, remove, update, sanitizeReservationInput } from "./reservation.controller.js";
 import { authenticateWithCategories } from "../middlewares/auth.middleware.js";
 export const reservationRouter = Router(); // cambio de export y nombre de router para facilidad en app.ts
 
 reservationRouter.get("/findAll", authenticateWithCategories(['admin', 'business_owner', 'user']), findAll);
+
+reservationRouter.get("/findAllFromUser/:id", authenticateWithCategories(['admin', 'business_owner', 'user']), findAllFromUser);
 
 reservationRouter.get("/findOne/:id", authenticateWithCategories(['admin', 'business_owner', 'user']), findOne);
 

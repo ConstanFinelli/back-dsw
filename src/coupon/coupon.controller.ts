@@ -51,15 +51,46 @@ async function update(req:Request, res:Response){
 }
 
 function sanitizeCouponInput(req:Request, res:Response, next:NextFunction){
-    req.body.sanitizedInput = {discount:req.body.discount, expiringDate:req.body.expiringDate, status:req.body.status}
-
-    Object.keys(req.body.sanitizedInput).forEach((key) =>{
-        if(req.body.sanitizedInput[key] === undefined){
-            delete req.body.sanitizedInput[key]
+    req.body.sanitizedInput = {id:req.body.id,discount:req.body.discount, expiringDate:req.body.expiringDate, status:req.body.status}
+    try {
+        if (req.body.id) {
+            const id = Number(req.body.id);
+            if (isNaN(id) || id < 0) {
+                res.status(400).json({ error: 'ID must be a positive integer number' });
+                return;
+            }
+            req.body.sanitizedInput.id = id;
         }
-    })
+        if (req.body.discount) {
+            const discount = Number(req.body.discount)
+            if (req.body.discount < 0 && req.body.discount > 1) {
+                res.status(400).json({ error: 'Invalid discount. Must be a float number between 0 and 1' });
+                return;
+            }
+            req.body.sanitizedInput.discount = discount
+        }
 
-    next()
+        if (req.body.expiringDate) {
+            const expiringDate = new Date(req.body.expiringDate)
+            if (expiringDate < new Date()) {
+                res.status(400).json({ error: 'Invalid date' });
+                return;
+            }
+        }
+
+        if (req.body.status) {
+            const status = req.body.status.trim().toLowerCase();
+            const validStates = ['expirado', 'activo', 'inactivo']
+            if (!validStates.includes(status)) {
+                res.status(400).json({ error: 'Status must be: expirado, activo or inactivo' });
+                return;
+            }
+            req.body.sanitizedInput.status = status;
+        }
+        next();
+    } catch (error) {
+        res.status(400).json({ error: 'Invalid input data' });
+    }
 }
 
 export { findAll, findOne, add, remove, update, sanitizeCouponInput }

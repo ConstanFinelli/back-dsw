@@ -1,7 +1,13 @@
 import { NextFunction, Request, Response } from "express";
 import { ReservationRepository } from "./reservation.repository.js";
+import orm from "../shared/db/orm.js";
+import { Reservation } from "./reservation.entities.js";
+import { User } from "../user/user.entities.js";
+import { Pitch } from "../pitch/pitch.entities.js";
 
 const repository = new ReservationRepository();
+
+const em = orm.em.fork();
 
 async function findAll(req: Request, res: Response) {
   try {
@@ -9,6 +15,16 @@ async function findAll(req: Request, res: Response) {
     res.send({ data: reservations });
   } catch (e) {
     res.status(500).send({ error: e });
+  }
+}
+
+async function findAllFromUser(req: Request, res: Response) {
+  try {
+    const reservations = await em.find(Reservation, {user:Number(req.params.id)});
+    res.send({ data: reservations });
+  } catch (e) {
+    res.status(500).send({ error: e });
+    console.log(e)
   }
 }
 
@@ -67,9 +83,20 @@ function sanitizeReservationInput(req: Request, res: Response, next: NextFunctio
     }
   }
 
-  if (typeof reservationTime === 'string') {
+ if (typeof reservationTime === 'string') {
+  const timeMatch = reservationTime.match(/^(\d{2}):(\d{2})(?::(\d{2}))?/);
+
+  if (timeMatch && reservationDate instanceof Date && !isNaN(reservationDate.getTime())) {
+    const hours = parseInt(timeMatch[1], 10);
+    const minutes = parseInt(timeMatch[2], 10);
+    const seconds = timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
+
+    const fullDateTime = new Date(reservationDate);
+    fullDateTime.setHours(hours, minutes, seconds, 0);
+    reservationTime = fullDateTime;
+  } else {
     reservationTime = new Date(reservationTime);
-  }
+  }}
 
   req.body.sanitizedInput = {
     ReservationDate: reservationDate, 
@@ -77,6 +104,18 @@ function sanitizeReservationInput(req: Request, res: Response, next: NextFunctio
     pitch: req.body.pitch, 
     user: req.body.user    
   };
+
+  const userFound = em.findOne(User, {id:req.body.user})
+  if(!userFound){
+    res.status(404).send({error:'User not found'})
+    return
+  }
+
+  const pitchFound = em.findOne(Pitch, {id:req.body.pitch})
+  if(!pitchFound){
+    res.status(404).send({error:'Pitch not found'})
+    return
+  }
 
   Object.keys(req.body.sanitizedInput).forEach((key) => {
     if (req.body.sanitizedInput[key] === undefined) {
@@ -89,6 +128,7 @@ function sanitizeReservationInput(req: Request, res: Response, next: NextFunctio
 
 export {
   findAll,
+  findAllFromUser,
   findOne,
   add,
   remove,
