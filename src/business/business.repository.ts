@@ -14,6 +14,11 @@ export class BusinessRepository {
         return business;
     }
 
+    public async findBusinessByOwnerId(ownerId: number): Promise<Business[] | null> {
+        const businesses = await em.find(Business, { owner: ownerId });
+        return businesses.length ? businesses : null;
+    }
+
     public async findOne(id: number): Promise<Business | null> {
         return await em.findOne(Business, { id });
     }

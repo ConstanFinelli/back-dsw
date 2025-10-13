@@ -1,13 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import { Pitch } from './pitch.entities.js';
 import { PitchRepository } from './pitch.repository.js';
-import { cloudinaryService } from '../services/imageService.js';
+import { cloudinaryService } from '../services/imageService.js'; // ← CAMBIAR IMPORT
 import orm from '../shared/db/orm.js';
 import { Business } from '../business/business.entities.js';
 
 const repository = new PitchRepository();
-
-const em = orm.em
 
 async function add(req: Request, res: Response): Promise<void> {
     try {
@@ -21,8 +19,12 @@ async function add(req: Request, res: Response): Promise<void> {
             res.status(400).json({ error: 'Business is required' });
             return;
         }
-        const businessExists = await em.findOne(Business, {id:business})
-        if(!businessExists){
+        
+        // ✅ USAR FORK() AQUÍ:
+        const em = orm.em.fork();
+        const businessExists = await em.findOne(Business, {id: business});
+        
+        if (!businessExists) {
             res.status(400).json({ error: 'Non-existent Business' });
             return;
         }
@@ -135,6 +137,28 @@ async function findAll(req: Request, res: Response): Promise<void> {
     }
 }
 
+async function findByBusinessId(req: Request, res: Response): Promise<void> {
+    try {
+        const businessId = Number(req.params.businessId);
+        
+        if (!businessId) {
+            res.status(400).json({ error: 'Business ID is required' });
+            return;
+        }
+        
+        const pitchs = await repository.findByBusinessId(businessId);
+        
+        if (!pitchs || pitchs.length === 0) {
+            res.status(404).json({ error: 'No pitches found for this business' });
+            return;
+        }
+        
+        res.status(200).json({ data: pitchs });
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+}
+
 async function findOne(req: Request, res: Response): Promise<void> {
     try {
         const pitch = await repository.findOne(Number(req.params.id));
@@ -221,4 +245,4 @@ function sanitizePitchInput(req: Request, res: Response, next: NextFunction) {
     }
 }
 
-export { sanitizePitchInput, add, update, remove, findAll, findOne };
+export { sanitizePitchInput, add, update, remove, findAll, findOne, findByBusinessId };
