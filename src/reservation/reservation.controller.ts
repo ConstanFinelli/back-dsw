@@ -20,7 +20,7 @@ async function findAll(req: Request, res: Response) {
 
 async function findAllFromUser(req: Request, res: Response) {
   try {
-    const reservations = await em.find(Reservation, {user:Number(req.params.id)});
+    const reservations = await em.find(Reservation, {user:Number(req.params.id)},{populate: ['pitch.business']});
     res.send({ data: reservations });
   } catch (e) {
     res.status(500).send({ error: e });
