@@ -16,7 +16,7 @@ export class PitchRepository {
     
     public async findOne(id:number):Promise<Pitch | undefined>{
         const em = orm.em.fork(); // ← AGREGAR fork()
-        const pitch = await em.findOneOrFail(Pitch, {id})
+        const pitch = await em.findOneOrFail(Pitch, {id}, {populate:['business']})
         return pitch as Pitch
     }
     
