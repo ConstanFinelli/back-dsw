@@ -45,4 +45,19 @@ export class ReservationRepository {
     await em.flush();
     return reservation;
   }
+
+/* obtiene solo fechas y horas ocupadas para validar disponibilidad */
+public async findOccupiedSlotsByPitch(id: number): Promise<{ ReservationDate: Date; ReservationTime: Date }[]> {
+    const em = orm.em.fork();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    return await em.find(Reservation, { 
+        pitch: { id },
+        ReservationDate: { $gte: today }
+    }, {
+        fields: ['ReservationDate', 'ReservationTime'], // ✅ Solo campos necesarios
+        orderBy: { ReservationDate: 'asc' }
+    });
+}
 }

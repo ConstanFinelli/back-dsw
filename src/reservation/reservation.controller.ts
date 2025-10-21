@@ -89,6 +89,16 @@ async function update(req: Request, res: Response) {
   }
 }
 
+async function findOccupiedSlotsByPitch(req: Request, res: Response) {
+  try {
+    const pitchId = Number(req.params.pitchId);
+    const occupiedSlots = await repository.findOccupiedSlotsByPitch(pitchId);
+    res.status(200).json({ data: occupiedSlots });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+}
+
 function sanitizeReservationInput(req: Request, res: Response, next: NextFunction) {
 
   const em = orm.em.fork();
@@ -160,12 +170,13 @@ function sanitizeReservationInput(req: Request, res: Response, next: NextFunctio
   validateAndNext();
 }
 
-// ✅ AGREGAR AL EXPORT:
+
 export {
   findAll,
   findAllFromUser,
-  findByBusiness, // ← AGREGAR
+  findByBusiness,
   findOne,
+  findOccupiedSlotsByPitch,
   add,
   remove,
   update,
