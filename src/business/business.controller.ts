@@ -1,8 +1,82 @@
+import { Schema } from "express-validator";
 import {BusinessRepository} from "./business.repository.js";
 import { Request, Response } from "express";
+import orm from "../shared/db/orm.js";
+import { User } from "../user/user.entities.js";
+import { Locality } from "../locality/locality.entities.js";
 
 
 const businessRepository = new BusinessRepository();
+
+const em = orm.em.fork()
+
+export const BusinessSchema:Schema = {
+    address: {
+        notEmpty: {errorMessage: 'Must specify an address.'},
+        isLength: {
+             options: {min:0},
+            errorMessage: 'Address must not be empty'
+        },
+        isString: {
+        errorMessage: 'Address must be a string'
+    }
+  },
+  businessName: {
+    notEmpty: {errorMessage: 'Must specify a businessName.'},
+    isLength: {
+      options: {min:0},
+      errorMessage: 'businessName must not be empty'
+    },
+    isString: {
+      errorMessage: 'businessName must be a string'
+    }
+  },
+  averageRating: {
+    notEmpty: {errorMessage: 'Must specify an averageRating.'},
+    isFloat: {
+        options: {min:0.0, max:5.0},
+        errorMessage: 'averageRating must be a float number between 0.0 and 5.0'
+    }
+  },
+  reservationDepositPercentage: {
+    notEmpty: {errorMessage: 'Must specify a reservationDepositPercentage.'},
+    isFloat: {
+        options: {min:0.0, max:1.0},
+        errorMessage: 'reservationDepositPercentage must be a float number between 0.0 and 1.0'
+    }
+  },
+  openingAt: {
+    notEmpty: {errorMessage: 'Must specify openingAt hour'},
+    matches: {
+        options: [/^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/],
+        errorMessage: 'openingAt must be a valid HH:MM format (00:00 to 23:59)'
+    }
+  },
+  owner: {
+    notEmpty: {errorMessage: 'Must specify an owner'},
+    custom: {
+        options: async(value) => {
+            const owner = await em.findOneOrFail(User, {id:value})
+            if(!owner){
+                throw new Error('Could not find an owner')
+            }
+            return true
+        }
+    }
+  },
+  locality: {
+    notEmpty: {errorMessage: 'Must specify a locality'},
+    custom: {
+        options: async(value) => {
+            const locality = await em.findOneOrFail(Locality, {id:value})
+            if(!locality){
+                throw new Error('Could not find a locality')
+            }
+            return true
+        }
+    }
+  },
+}
 
 async function findAll(req: Request, res: Response) {
     try {
@@ -29,33 +103,6 @@ async function findOne(req: Request, res: Response) {
 async function add(req: Request, res: Response) {
     try {
         const business = req.body;
-        const missingFields = [];
-        
-        if (!business.businessName) missingFields.push('businessName');
-        if (!business.address) missingFields.push('address');
-        if (business.averageRating === undefined) missingFields.push('averageRating');
-        if (business.reservationDepositPercentage === undefined) missingFields.push('reservationDepositPercentage');
-        if (!business.owner) missingFields.push('owner');
-        if (!business.locality) missingFields.push('locality');
-
-        if (missingFields.length > 0) {
-            res.status(400).send({ 
-                message: "Missing required fields", 
-                missingFields: missingFields 
-            });
-            return;
-        }
-
-        // Validar que owner y locality sean números o tengan id
-        if (typeof business.owner === 'object' && !business.owner.id) {
-            res.status(400).send({ message: "owner must have an id" });
-            return;
-        }
-        if (typeof business.locality === 'object' && !business.locality.id) {
-            res.status(400).send({ message: "locality must have an id" });
-            return;
-        }
-        
         const newBusiness = await businessRepository.add(business);
         res.status(201).send({ message: "Business created successfully", data: newBusiness });
     } catch (e: any) {
@@ -154,9 +201,9 @@ async function activate(req: Request, res: Response) {
             return;
         }
         
-        // ✅ Actualizar ambos campos
+        // Actualizar ambos campos
         business.active = true;
-        business.activatedAt = new Date(); // ← AGREGAR ESTA LÍNEA
+        business.activatedAt = new Date(); 
         
         const updatedBusiness = await businessRepository.update(business);
         if (!updatedBusiness) {

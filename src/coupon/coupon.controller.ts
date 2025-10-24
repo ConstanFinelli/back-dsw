@@ -5,7 +5,7 @@ import { checkSchema, Schema, validationResult } from "express-validator";
 
 const repository = new CouponRepository()
 
-const CouponSchema:Schema = {
+export const CouponSchema:Schema = {
     discount: {
         notEmpty: true,
         errorMessage: 'Must specify a discount.',
@@ -85,17 +85,4 @@ async function update(req:Request, res:Response){
     }
 }
 
-async function sanitizeCouponInput(req:Request, res:Response, next:NextFunction){
-    req.body.sanitizedInput = {discount:req.body.discount, expiringDate:req.body.expiringDate, status:req.body.status}
-    await Promise.all(
-     checkSchema(CouponSchema).map(validation => validation.run(req))
-    );
-    const errors = validationResult(req)
-    if(!errors.isEmpty()){
-        res.status(400).json({ errors: errors.array()})
-        return
-    }
-    next()
-}
-
-export { findAll, findOne, add, remove, update, sanitizeCouponInput }
+export { findAll, findOne, add, remove, update }
