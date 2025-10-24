@@ -5,7 +5,7 @@ import { checkSchema, Schema, validationResult } from "express-validator";
 
 const repository = new CategoryRepository();
 
-const CategorySchema:Schema = {
+export const CategorySchema:Schema = {
   description: {
     notEmpty: {errorMessage: 'Must specify a description.'},
     isLength: {
@@ -113,29 +113,6 @@ const update: RequestHandler = async (req, res) => {
   }
 };
 
-const sanitizeCategoryInput: RequestHandler = async(req, res, next) => {
-  req.body.sanitizedInput = {
-    description: req.body.description,
-    usertype: req.body.usertype,
-  };
-
-  Object.keys(req.body.sanitizedInput).forEach((key) => {
-    if (req.body.sanitizedInput[key] === undefined) {
-      delete req.body.sanitizedInput[key];
-    }
-  });
-  await Promise.all(
-     checkSchema(CategorySchema).map(validation => validation.run(req))
-    );
-    const errors = validationResult(req)
-    if(!errors.isEmpty()){
-        res.status(400).json({ errors: errors.array()})
-        return
-    }
-
-  next();
-};
-
-export { findAll, findOne, add, remove, update, sanitizeCategoryInput };
+export { findAll, findOne, add, remove, update };
 
 

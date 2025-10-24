@@ -4,10 +4,66 @@ import { PitchRepository } from './pitch.repository.js';
 import { cloudinaryService } from '../services/imageService.js'; // ← CAMBIAR IMPORT
 import orm from '../shared/db/orm.js';
 import { Business } from '../business/business.entities.js';
+import { Schema } from 'express-validator';
 
 const repository = new PitchRepository();
 
 const em = orm.em.fork()
+
+const PITCH_SIZES = ['5v5', '7v7', '11v11']
+const GROUND_TYPES = ['césped natural', 'césped sintético', 'cemento', 'arcilla']
+
+export const PitchSchema:Schema = {
+    rating: {
+        notEmpty: {errorMessage:'Must specify a rating'},
+        isFloat: {
+            options: {min:0.0, max:5.0}
+        }
+    },
+    size: {
+        notEmpty: {errorMessage:'Must specify a size'},
+        isIn: {
+            options: PITCH_SIZES,
+            errorMessage: 'Pitch Size must be: ' + PITCH_SIZES
+        }
+    },
+    groundType: {
+        notEmpty: {errorMessage: 'Must specify a groundType'},
+        isIn: {
+            options: GROUND_TYPES,
+            errorMessage: 'Ground Type must be one of: ' + GROUND_TYPES
+        }
+    },
+    roof: {
+        notEmpty: {errorMessage: 'Must specify if roofed or not'},
+        isBoolean: {
+            errorMessage: 'Roof must be a boolean value'
+        }
+    },
+    price: {
+        notEmpty: {errorMessage: 'Must specify a price'},
+        isFloat: {
+            options: {min:0.0},
+            errorMessage: 'Price must be a positive float number'
+        }
+    },
+    business: {
+        notEmpty: {errorMessage: 'Must specify a business'},
+        isInt: {
+            options: {min:1},
+            errorMessage: 'Business must be a valid ID'
+        },
+        custom: {
+            options: async (value) => {
+                const business = await em.findOne(Business, {id: value});
+                if (!business) {
+                    throw new Error('Could not find a business');
+                }
+                return true
+            }
+        }
+    }
+}
 
 async function add(req: Request, res: Response): Promise<void> {
     try {
@@ -174,77 +230,4 @@ async function findOne(req: Request, res: Response): Promise<void> {
     }
 }
 
-function sanitizePitchInput(req: Request, res: Response, next: NextFunction) {
-    try {
-        // Limpiar y validar datos
-        const sanitized: any = {};
-
-        // Rating: 1-5
-        if (req.body.rating) {
-            const rating = Number(req.body.rating);
-            if (isNaN(rating) || rating < 1 || rating > 5) {
-                res.status(400).json({ error: 'Rating must be between 1 and 5' });
-                return;
-            }
-            sanitized.rating = rating;
-        }
-
-        // Size: valores permitidos
-        if (req.body.size) {
-            const size = req.body.size.trim().toLowerCase();
-            const validSizes = ['5v5', '7v7', '11v11'];
-            if (validSizes.includes(size)) {
-                sanitized.size = size;
-            } else {
-                res.status(400).json({ error: 'Invalid size. Must be: 5v5, 7v7, 11v11' });
-                return;
-            }
-        }
-
-        // Ground type: valores permitidos
-        if (req.body.groundType) {
-            const groundType = req.body.groundType.trim().toLowerCase();
-            const validTypes = ['césped natural', 'césped sintético', 'cemento', 'arcilla'];
-            if (validTypes.includes(groundType)) {
-                sanitized.groundType = groundType;
-            } else {
-                res.status(400).json({ error: 'Invalid ground type' });
-                return;
-            }
-        }
-
-        // Roof: boolean
-        if (req.body.roof !== undefined) {
-            sanitized.roof = req.body.roof === 'true' || req.body.roof === true;
-        }
-
-        // Price: número positivo
-        if (req.body.price) {
-            const price = Number(req.body.price);
-            if (isNaN(price) || price < 0) {
-                res.status(400).json({ error: 'Price must be a positive number' });
-                return;
-            }
-            sanitized.price = price;
-        }
-
-        // Business: ID válido
-        if (req.body.business) {
-            const business = Number(req.body.business);
-            if (isNaN(business) || business < 1) {
-                res.status(400).json({ error: 'Invalid business ID' });
-                return;
-            }
-            sanitized.business = business;
-        }
-
-        // ✅ Guardar datos sanitizados
-        req.body.sanitizedInput = sanitized;
-        next();
-
-    } catch (error) {
-        res.status(400).json({ error: 'Invalid input data' });
-    }
-}
-
-export { sanitizePitchInput, add, update, remove, findAll, findOne, findByBusinessId };
+export { add, update, remove, findAll, findOne, findByBusinessId };

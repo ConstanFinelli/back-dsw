@@ -6,12 +6,57 @@ import { CategoryRepository } from "../category/category.repository.js";
 import { Business } from "../business/business.entities.js";
 import { orm } from "../shared/db/orm.js"
 import { Category } from "../category/category.entities.js";
+import { Schema } from "express-validator";
 
 const userRepository = new UserRepository();
 const categoryRepository = new CategoryRepository();
 
 const em = orm.em.fork()
 
+export const UserSchema:Schema = {
+    name:{
+        isString:true,
+        notEmpty:true,
+        errorMessage:'Name is required and must be a non-empty string'
+    },
+    surname:{
+        isString:true,
+        notEmpty:true,
+        errorMessage:'Surname is required and must be a non-empty string'
+    },
+    email:{
+        isEmail:true,
+        notEmpty:true,
+        normalizeEmail:true,
+        errorMessage:'An email is required and must be valid'
+    },
+    password:{
+        isString:true,
+        notEmpty:true,
+        isLength:{
+            options:{min:6},
+            errorMessage:'Password must be at least 6 characters long'
+        },
+        errorMessage:'Password is required and must be a string'
+    },
+    categoryId:{
+        notEmpty:{errorMessage:'Category ID is required'},
+        custom:{
+            options: async (value:number) => {
+                const category = await em.findOne(Category,{id:value});
+                if(!category){
+                    throw new Error('Category not found');
+                }
+                return true;
+            }
+        }
+    },
+    phoneNumber:{
+        optional:true,
+        isString:true,
+        errorMessage:'Phone number must be a string'
+    }
+};
 async function findAll(req: Request, res: Response): Promise<void> {
     try {
         const users = await userRepository.findAll();
@@ -53,16 +98,7 @@ async function findOne(req: Request, res: Response): Promise<void> {
         }
 
         // Excluir información sensible y formatear la respuesta
-        const userResponse = {
-            id: user.id,
-            name: user.name,
-            surname: user.surname,
-            email: user.email,
-            phoneNumber: user.phoneNumber,
-            categoryName: user.category?.usertype || 'Unknown', // Usar el nombre de la categoría
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt
-        };
+        const userResponse = { ...user, password: undefined };
         
         res.json({ data: userResponse });
     } catch (e) {
@@ -73,41 +109,8 @@ async function findOne(req: Request, res: Response): Promise<void> {
 
 async function add(req:Request, res: Response): Promise<void> {
     try {
-        const user = req.body;
-        const validationErrors = [];
+        const user = req.body.sanitizedInput;
         
-        // Validar campos requeridos
-        if (!user.name?.trim()) {
-            validationErrors.push({ field: 'name', message: 'Name is required' });
-        }
-        if (!user.surname?.trim()) {
-            validationErrors.push({ field: 'surname', message: 'Surname is required' });
-        }
-        if (!user.email?.trim()) {
-            validationErrors.push({ field: 'email', message: 'Email is required' });
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
-            validationErrors.push({ field: 'email', message: 'Invalid email format' });
-        }
-        if (!user.password?.trim()) {
-            validationErrors.push({ field: 'password', message: 'Password is required' });
-        } else if (user.password.length < 6) {
-            validationErrors.push({ field: 'password', message: 'Password must be at least 6 characters' });
-        }
-        if (!user.categoryId) {
-            validationErrors.push({ field: 'categoryId', message: 'Category ID is required' });
-        } else if (isNaN(Number(user.categoryId))) {
-            validationErrors.push({ field: 'categoryId', message: 'Category ID must be a number' });
-        }
-
-        // Si hay errores de validación, devolver inmediatamente
-        if (validationErrors.length > 0) {
-            res.status(400).json({ 
-                message: "Validation errors", 
-                errors: validationErrors 
-            });
-            return;
-        }
-
         // Verificar que el email no esté ya registrado
         const existingUser = await userRepository.findByEmail(user.email);
         if (existingUser) {
@@ -117,29 +120,13 @@ async function add(req:Request, res: Response): Promise<void> {
             return;
         }
 
-        // Verificar que la categoría existe
-        const category = await categoryRepository.findOne(Number(user.categoryId));
-        if (!category) {
-            res.status(400).json({ 
-                message: "Category not found" 
-            });
-            return;
-        }
-
         // Hashear la contraseña antes de guardar
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(user.password, saltRounds);
+        
+        user.password = hashedPassword;
 
-        // Crear objeto usuario con contraseña hasheada
-        const userEntity = new User();
-        userEntity.name = user.name.trim();
-        userEntity.surname = user.surname.trim();
-        userEntity.email = user.email.toLowerCase().trim();
-        userEntity.password = hashedPassword;
-        userEntity.category = category; // Asignar la entidad Category completa
-        userEntity.phoneNumber = user.phoneNumber || null;
-
-        const newUser = await userRepository.add(userEntity);
+        const newUser = await userRepository.add(user);
         const userResponse = { ...newUser, password: undefined }; // Excluir la contraseña del response
         res.status(201).json({
             message: "User created successfully",
@@ -171,93 +158,15 @@ async function update(req: Request, res: Response): Promise<void> {
     try {
         const userId = Number(req.params.id);
         
-        // Validar que el ID sea válido
         if (isNaN(userId) || userId <= 0) {
             res.status(400).send({ message: "Invalid user ID" });
             return;
         }
-
-        // Verificar que el usuario existe
-        const user = await userRepository.findOne(userId);
-        if (!user) {
-            res.status(404).send({ message: "User not found" });
-            return;
-        }
-
-        // Validar campos del body (solo los que vienen)
-        const updateData = req.body;
-        const validationErrors = [];
-
-        // Solo validar campos que están presentes en el body
-        if ('name' in updateData && (!updateData.name || !updateData.name.trim())) {
-            validationErrors.push({ field: 'name', message: 'Name cannot be empty' });
-        }
-        if ('surname' in updateData && (!updateData.surname || !updateData.surname.trim())) {
-            validationErrors.push({ field: 'surname', message: 'Surname cannot be empty' });
-        }
-        if ('email' in updateData && (!updateData.email || !updateData.email.trim())) {
-            validationErrors.push({ field: 'email', message: 'Email cannot be empty' });
-        }
-        if ('email' in updateData && updateData.email && !/\S+@\S+\.\S+/.test(updateData.email)) {
-            validationErrors.push({ field: 'email', message: 'Invalid email format' });
-        }
-        if ('password' in updateData && (!updateData.password || !updateData.password.trim())) {
-            validationErrors.push({ field: 'password', message: 'Password cannot be empty' });
-        }
-        // Agregar validación para phoneNumber
-        if ('phoneNumber' in updateData && updateData.phoneNumber && typeof updateData.phoneNumber !== 'string') {
-            validationErrors.push({ field: 'phoneNumber', message: 'Phone number must be a string' });
-        }
-
-        // Validar categoryId si está presente
-        if ('categoryId' in updateData) {
-            if (!updateData.categoryId || isNaN(Number(updateData.categoryId))) {
-                validationErrors.push({ field: 'categoryId', message: 'Valid category ID is required' });
-            } else {
-                // Verificar que la categoría existe
-                const category = await categoryRepository.findOne(Number(updateData.categoryId));
-                if (!category) {
-                    validationErrors.push({ field: 'categoryId', message: 'Category not found' });
-                } else {
-                    // Convertir categoryId a la entidad Category
-                    updateData.category = category;
-                    delete updateData.categoryId; // Remover categoryId ya que usamos category
-                }
-            }
-        }
-
-        if (validationErrors.length > 0) {
-            res.status(400).send({ 
-                message: "Validation errors", 
-                errors: validationErrors 
-            });
-            return;
-        }
-
-        // Filtrar solo campos permitidos - CAMBIAR 'category' por 'categoryId' en el body
-        const allowedFields = ['name', 'surname', 'email', 'password', 'category', 'phoneNumber'];
-        const filteredUpdateData: any = {};
-        
-        allowedFields.forEach(field => {
-            if (field in updateData) {
-                filteredUpdateData[field] = updateData[field];
-            }
-        });
-
-        // Verificar que hay algo para actualizar
-        if (Object.keys(filteredUpdateData).length === 0) {
-            res.status(400).send({ message: "No valid fields to update" });
-            return;
-        }
-
-        // Combinar usuario existente con nuevos datos
-        const updatedUser = { ...user, ...filteredUpdateData, id: userId };
-        const result = await userRepository.update(updatedUser);
+        const result = await userRepository.update(req.body.sanitizedInput);
         
         res.send({ 
             message: "User updated successfully", 
             data: result,
-            updatedFields: Object.keys(filteredUpdateData)
         });
     } catch (e) {
         res.status(500).send({ message: "Internal server error" });

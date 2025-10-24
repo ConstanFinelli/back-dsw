@@ -4,8 +4,90 @@ import orm from "../shared/db/orm.js";
 import { Reservation } from "./reservation.entities.js";
 import { User } from "../user/user.entities.js";
 import { Pitch } from "../pitch/pitch.entities.js";
+import { Schema } from "express-validator";
 
 const repository = new ReservationRepository();
+
+const em = orm.em.fork();
+
+const STATUS_VALUES = ['pendiente', 'en curso', 'cancelada', 'completada'];
+
+export const ReservationSchema:Schema = {
+  ReservationDate: {
+    notEmpty: { errorMessage: 'Must specify a ReservationDate.' },
+    isDate: { 
+      errorMessage: 'ReservationDate must be a valid date.'
+     },
+     custom: {
+            options: (value) =>{
+                const date = new Date(value) // fecha en el json
+                const today = new Date() // fecha de hoy
+
+                if(date <= today){
+                    throw new Error('ReservationDate must be future')
+                }
+                return true
+            }
+        }
+  },
+  ReservationTime: {
+    notEmpty: { errorMessage: 'Must specify a ReservationTime.' },
+    matches: {
+      options: [/^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/],
+      errorMessage: 'ReservationTime must be in HH:MM:SS format.',
+    },
+    custom: {
+      options: async(value, {req}) => {
+        const pitchId = req.body.pitch;
+        if (!pitchId) {
+          throw new Error('Pitch ID is required to validate ReservationTime.');
+        }
+        const pitch = await em.findOne(Pitch, { id: pitchId }, {populate: ['business']});
+        if (!pitch) {
+            throw new Error('Could not find a pitch to validate ReservationTime.');
+          }
+        const openedTime = pitch.business.openingAt; 
+        const closedTime = pitch.business.closingAt;
+          
+        if (value < openedTime || value > closedTime) {
+          throw new Error(`ReservationTime must be within business hours: ${openedTime} - ${closedTime}.`);
+        }
+        return true;
+      }
+    }
+  },
+  pitch: {
+    notEmpty: { errorMessage: 'Must specify a pitch.' },
+    custom: {
+      options: async (value:number) => {
+        const pitch = await em.findOne(Pitch, { id: value });
+        if (!pitch) {
+          throw new Error('Could not find a pitch');
+        }
+        return true;
+      },
+    },
+  },
+  user: {
+    notEmpty: { errorMessage: 'Must specify a user.' },
+    custom: {
+      options: async (value:number) => {
+        const user = await em.findOne(User, { id: value });
+        if (!user) {
+          throw new Error('Could not find a user');
+        }
+        return true;
+      },
+    },
+  },
+  status: {
+    notEmpty: { errorMessage: 'Must specify a status.' },
+    isIn: {
+      options: STATUS_VALUES,
+      errorMessage: 'Status must be: ' + STATUS_VALUES,
+    },
+  },
+};
 
 async function findAll(req: Request, res: Response) {
   try {
@@ -18,7 +100,6 @@ async function findAll(req: Request, res: Response) {
 
 async function findAllFromUser(req: Request, res: Response) {
   try {
-    const em = orm.em.fork(); // ✅ Fork local
     const reservations = await em.find(Reservation, {user:Number(req.params.id)},{populate: ['pitch.business']});
     res.send({ data: reservations });
   } catch (e) {
@@ -99,78 +180,6 @@ async function findOccupiedSlotsByPitch(req: Request, res: Response) {
   }
 }
 
-function sanitizeReservationInput(req: Request, res: Response, next: NextFunction) {
-
-  const em = orm.em.fork();
-  
-  // Convertir fechas de string a Date si es necesario
-  let reservationDate = req.body.ReservationDate;
-  let reservationTime = req.body.ReservationTime;
-
-  // Si viene como string, crear Date en zona horaria local
-  if (typeof reservationDate === 'string') {
-    const dateMatch = reservationDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (dateMatch) {
-      reservationDate = new Date(parseInt(dateMatch[1]), parseInt(dateMatch[2]) - 1, parseInt(dateMatch[3]));
-    } else {
-      reservationDate = new Date(reservationDate);
-    }
-  }
-
-  if (typeof reservationTime === 'string') {
-    const timeMatch = reservationTime.match(/^(\d{2}):(\d{2})(?::(\d{2}))?/);
-
-    if (timeMatch && reservationDate instanceof Date && !isNaN(reservationDate.getTime())) {
-      const hours = parseInt(timeMatch[1], 10);
-      const minutes = parseInt(timeMatch[2], 10);
-      const seconds = timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
-
-      const fullDateTime = new Date(reservationDate);
-      fullDateTime.setHours(hours, minutes, seconds, 0);
-      reservationTime = fullDateTime;
-    } else {
-      reservationTime = new Date(reservationTime);
-    }
-  }
-
-  req.body.sanitizedInput = {
-    ReservationDate: reservationDate, 
-    ReservationTime: reservationTime, 
-    pitch: req.body.pitch, 
-    user: req.body.user    
-  };
-
-  // ✅ HACER ASYNC LAS VALIDACIONES:
-  const validateAndNext = async () => {
-    try {
-      const userFound = await em.findOne(User, {id: req.body.user});
-      if (!userFound) {
-        res.status(404).send({error: 'User not found'});
-        return;
-      }
-
-      const pitchFound = await em.findOne(Pitch, {id: req.body.pitch});
-      if (!pitchFound) {
-        res.status(404).send({error: 'Pitch not found'});
-        return;
-      }
-
-      Object.keys(req.body.sanitizedInput).forEach((key) => {
-        if (req.body.sanitizedInput[key] === undefined) {
-          delete req.body.sanitizedInput[key];
-        }
-      });
-
-      next();
-    } catch (error) {
-      res.status(500).send({error: 'Validation error'});
-    }
-  };
-
-  validateAndNext();
-}
-
-
 export {
   findAll,
   findAllFromUser,
@@ -179,6 +188,5 @@ export {
   findOccupiedSlotsByPitch,
   add,
   remove,
-  update,
-  sanitizeReservationInput
+  update
 };

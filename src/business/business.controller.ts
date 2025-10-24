@@ -56,7 +56,7 @@ export const BusinessSchema:Schema = {
     notEmpty: {errorMessage: 'Must specify an owner'},
     custom: {
         options: async(value) => {
-            const owner = await em.findOneOrFail(User, {id:value})
+            const owner = await em.findOne(User, {id:value})
             if(!owner){
                 throw new Error('Could not find an owner')
             }

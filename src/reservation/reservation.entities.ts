@@ -18,4 +18,10 @@ export class Reservation {
 
   @ManyToOne(() => Pitch )
   pitch!: Rel<Pitch>;
+
+  @Property()
+  status!: string;
+
+  @Property({ onCreate: () => new Date() })
+  createdAt!: Date;
 }

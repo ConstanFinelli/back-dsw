@@ -5,6 +5,8 @@ import { checkSchema, Schema, validationResult } from "express-validator";
 
 const repository = new CouponRepository()
 
+const STATUS_VALUES = ['expirado', 'activo', 'inactivo'];
+
 export const CouponSchema:Schema = {
     discount: {
         notEmpty: true,
@@ -17,6 +19,7 @@ export const CouponSchema:Schema = {
     expiringAt: {
         notEmpty: true,
         errorMessage: 'Must specify an expiring date.',
+        isDate: { errorMessage: 'Expiring date must be a valid date.' },
         custom: {
             options: (value) =>{
                 const date = new Date(value) // fecha en el json
@@ -33,8 +36,8 @@ export const CouponSchema:Schema = {
         notEmpty: true,
         errorMessage: 'Must specify a status.',
         isIn: {
-            options: ['expirado', 'activo', 'inactivo'],
-            errorMessage: 'Status must be: expirado, activo or inactivo'
+            options: STATUS_VALUES,
+            errorMessage: 'Status must be: ' + STATUS_VALUES
         }
     }
 }
