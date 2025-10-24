@@ -1,8 +1,32 @@
 import { RequestHandler } from "express";
 import { CategoryRepository } from "./category.repository.js";
 import { Category } from "./category.entities.js";
+import { checkSchema, Schema, validationResult } from "express-validator";
 
 const repository = new CategoryRepository();
+
+const CategorySchema:Schema = {
+  description: {
+    notEmpty: {errorMessage: 'Must specify a description.'},
+    isLength: {
+      options: {min:0},
+      errorMessage: 'Description must not be empty'
+    },
+    isString: {
+      errorMessage: 'Description must be a string'
+    }
+  },
+  usertype: {
+    notEmpty: {errorMessage: 'Must specify a usertype.'},
+    isLength: {
+      options: {min:0},
+      errorMessage: 'Usertype must not be empty'
+    },
+    isString: {
+      errorMessage: 'Usertype must be a string'
+    }
+  }
+}
 
 const findAll: RequestHandler = async (req, res) => {
   try {
@@ -89,7 +113,7 @@ const update: RequestHandler = async (req, res) => {
   }
 };
 
-const sanitizeCategoryInput: RequestHandler = (req, res, next) => {
+const sanitizeCategoryInput: RequestHandler = async(req, res, next) => {
   req.body.sanitizedInput = {
     description: req.body.description,
     usertype: req.body.usertype,
@@ -100,6 +124,14 @@ const sanitizeCategoryInput: RequestHandler = (req, res, next) => {
       delete req.body.sanitizedInput[key];
     }
   });
+  await Promise.all(
+     checkSchema(CategorySchema).map(validation => validation.run(req))
+    );
+    const errors = validationResult(req)
+    if(!errors.isEmpty()){
+        res.status(400).json({ errors: errors.array()})
+        return
+    }
 
   next();
 };
