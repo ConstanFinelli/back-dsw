@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { findAll, findAllFromUser, findOne, add, remove, update, findByBusiness, findOccupiedSlotsByPitch, ReservationSchema } from "./reservation.controller.js";
+import { findAll, findAllFromUser, findOne, add, remove, update, findByBusiness, findOccupiedSlotsByPitch, ReservationSchema, cancel } from "./reservation.controller.js";
 import { authenticateWithCategories } from "../middlewares/auth.middleware.js";
 import { validateSchemaWithParams } from "../middlewares/schemaValidation.middleware.js";
 export const reservationRouter = Router(); // cambio de export y nombre de router para facilidad en app.ts
@@ -15,6 +15,8 @@ reservationRouter.get("/findOne/:id", authenticateWithCategories(['admin', 'busi
 reservationRouter.post("/add",  validateSchemaWithParams(ReservationSchema, allowedFields), add);
 
 reservationRouter.put("/update/:id", authenticateWithCategories(['admin']), validateSchemaWithParams(ReservationSchema, allowedFields), update);
+
+reservationRouter.put("/cancel/:id", authenticateWithCategories(['admin','user','business_owner']), cancel);
 
 reservationRouter.delete("/remove/:id", authenticateWithCategories(['admin', 'business_owner', 'user']), remove);
 

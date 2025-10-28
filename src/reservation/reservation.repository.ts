@@ -46,6 +46,15 @@ export class ReservationRepository {
     return reservation;
   }
 
+  public async cancel(id: number): Promise<Reservation> {
+    const em = orm.em.fork();
+    const reservation = await em.findOneOrFail(Reservation, { id });
+    const newReservation = reservation;
+    newReservation.status = 'cancelada';
+    em.assign(reservation, newReservation);
+    await em.flush();
+    return reservation;
+  }
 /* obtiene solo fechas y horas ocupadas para validar disponibilidad */
 public async findOccupiedSlotsByPitch(id: number): Promise<{ ReservationDate: Date; ReservationTime: string }[]> {
     const em = orm.em.fork();

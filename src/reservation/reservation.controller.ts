@@ -183,6 +183,16 @@ async function findOccupiedSlotsByPitch(req: Request, res: Response) {
   }
 }
 
+async function cancel(req: Request, res: Response) {
+  try {
+    const reservation = await repository.cancel(
+      Number.parseInt(req.params.id));
+    res.send({ canceledReservation: reservation });
+  } catch (e: any) {
+    res.status(400).send({ error: e.message });
+  }
+}
+
 export {
   findAll,
   findAllFromUser,
@@ -191,5 +201,6 @@ export {
   findOccupiedSlotsByPitch,
   add,
   remove,
-  update
+  update,
+  cancel
 };
