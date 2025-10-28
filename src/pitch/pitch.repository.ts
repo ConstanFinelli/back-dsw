@@ -1,5 +1,6 @@
 import {Pitch} from './pitch.entities.js'
 import orm from '../shared/db/orm.js';
+import { populate } from 'dotenv';
 
 export class PitchRepository {
     public async findAll():Promise<Pitch[] | undefined>{
@@ -40,6 +41,12 @@ export class PitchRepository {
         em.assign(updatedPitch, newPitch)
         await em.flush()
         return updatedPitch as Pitch
+    }
+    public async findAllFromActiveBusinesses():Promise<Pitch[] | undefined>{
+        const em = orm.em.fork();
+        const pitchs = await em.findAll(Pitch,{populate:['business'] });
+        const filtered = pitchs.filter(pitch => pitch.business.active);
+        return filtered as Pitch[];
     }
 }
 

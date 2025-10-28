@@ -47,7 +47,7 @@ export class ReservationRepository {
   }
 
 /* obtiene solo fechas y horas ocupadas para validar disponibilidad */
-public async findOccupiedSlotsByPitch(id: number): Promise<{ ReservationDate: Date; ReservationTime: Date }[]> {
+public async findOccupiedSlotsByPitch(id: number): Promise<{ ReservationDate: Date; ReservationTime: string }[]> {
     const em = orm.em.fork();
     const today = new Date();
     today.setHours(0, 0, 0, 0);

@@ -52,6 +52,13 @@ export const BusinessSchema:Schema = {
         errorMessage: 'openingAt must be a valid HH:MM format (00:00 to 23:59)'
     }
   },
+  closingAt: {
+    notEmpty: {errorMessage: 'Must specify closingAt hour'},
+    matches: {
+        options: [/^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/],
+        errorMessage: 'closingAt must be a valid HH:MM format (00:00 to 23:59)'
+    }
+  },
   owner: {
     notEmpty: {errorMessage: 'Must specify an owner'},
     custom: {
@@ -102,7 +109,7 @@ async function findOne(req: Request, res: Response) {
 
 async function add(req: Request, res: Response) {
     try {
-        const business = req.body;
+        const business = req.body.sanitizedInput;
         const newBusiness = await businessRepository.add(business);
         res.status(201).send({ message: "Business created successfully", data: newBusiness });
     } catch (e: any) {
@@ -116,7 +123,7 @@ async function add(req: Request, res: Response) {
 
 async function update(req: Request, res: Response) {
     try {
-        const business = req.body;
+        const business = req.body.sanitizedInput;
         if (!business.id) {
             res.status(400).send({ message: "Business ID is required for update" });
             return;

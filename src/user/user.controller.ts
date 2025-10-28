@@ -39,8 +39,8 @@ export const UserSchema:Schema = {
         },
         errorMessage:'Password is required and must be a string'
     },
-    categoryId:{
-        notEmpty:{errorMessage:'Category ID is required'},
+    category:{
+        notEmpty:{errorMessage:'Category is required'},
         custom:{
             options: async (value:number) => {
                 const category = await em.findOne(Category,{id:value});
@@ -51,10 +51,11 @@ export const UserSchema:Schema = {
             }
         }
     },
-    phoneNumber:{
-        optional:true,
-        isString:true,
-        errorMessage:'Phone number must be a string'
+    phoneNumber: {
+    optional: true,
+    isString: {
+        errorMessage: 'Phone number must be a string'
+    },
     }
 };
 async function findAll(req: Request, res: Response): Promise<void> {

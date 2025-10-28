@@ -217,6 +217,21 @@ async function findByBusinessId(req: Request, res: Response): Promise<void> {
     }
 }
 
+async function findAllFromActiveBusinesses(req: Request, res: Response): Promise<void> {
+    try {
+        const pitchs = await repository.findAllFromActiveBusinesses();
+        
+        if (!pitchs || pitchs.length === 0) {
+            res.status(404).json({ error: 'No pitches from active businesses' });
+            return;
+        }
+        
+        res.status(200).json({ data: pitchs });
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+}
+
 async function findOne(req: Request, res: Response): Promise<void> {
     try {
         const pitch = await repository.findOne(Number(req.params.id));
@@ -230,4 +245,4 @@ async function findOne(req: Request, res: Response): Promise<void> {
     }
 }
 
-export { add, update, remove, findAll, findOne, findByBusinessId };
+export { add, update, remove, findAll, findOne, findByBusinessId, findAllFromActiveBusinesses };

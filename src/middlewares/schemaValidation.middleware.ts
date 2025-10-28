@@ -11,6 +11,14 @@ const validateSchema = async(req: Request, res:Response, next:NextFunction, sche
         res.status(400).json({ errors: errors.array()})
         return
     }
+    const sanitizedInput: {[key:string]: any} = {};
+    allowedFields.forEach((field) => {
+        if (req.body[field] !== undefined) {
+            sanitizedInput[field] = req.body[field];
+        }
+    });
+    req.body.sanitizedInput = sanitizedInput;
+  
   next();
 };
 

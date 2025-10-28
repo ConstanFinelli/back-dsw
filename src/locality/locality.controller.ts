@@ -30,9 +30,6 @@ export const LocalitySchema:Schema = {
             options: {min:0},
             errorMessage: 'Postal code must be a positive integer number'
         },
-        isString: {
-        errorMessage: 'Address must be a string'
-    }
   },
 }
 

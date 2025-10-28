@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import { ReservationRepository } from "./reservation.repository.js";
 import orm from "../shared/db/orm.js";
 import { Reservation } from "./reservation.entities.js";
@@ -33,7 +33,7 @@ export const ReservationSchema:Schema = {
   ReservationTime: {
     notEmpty: { errorMessage: 'Must specify a ReservationTime.' },
     matches: {
-      options: [/^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/],
+      options: [/^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/],
       errorMessage: 'ReservationTime must be in HH:MM:SS format.',
     },
     custom: {
@@ -48,7 +48,10 @@ export const ReservationSchema:Schema = {
           }
         const openedTime = pitch.business.openingAt; 
         const closedTime = pitch.business.closingAt;
-          
+        const reservation = await em.findOne(Reservation, { ReservationTime: value, ReservationDate: req.body.ReservationDate, pitch: pitchId });
+        if (reservation) {
+          throw new Error('The selected time slot is already booked for this pitch.');
+        }
         if (value < openedTime || value > closedTime) {
           throw new Error(`ReservationTime must be within business hours: ${openedTime} - ${closedTime}.`);
         }

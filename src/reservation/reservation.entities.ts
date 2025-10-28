@@ -11,7 +11,7 @@ export class Reservation {
   ReservationDate!: Date;
 
   @Property()
-  ReservationTime!: Date;
+  ReservationTime!: string;
 
   @ManyToOne(() => User ) 
   user!: Rel<User>; // interfaz para la inicialización de la base de datos y relaciones, typescript con reflect-metadata produce errores y hace necesario esto
