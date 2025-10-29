@@ -22,6 +22,10 @@ export class CategoryRepository {
     const em = this.em;
     return await em.findOne(Category, { id });
   }
+  async findByUsertype(usertype: string): Promise<Category | null> {
+    const em = this.em;
+    return await em.findOne(Category, { usertype: usertype });
+  }
 
   async add(category: Category): Promise<Category | null> {
     const em = this.em;

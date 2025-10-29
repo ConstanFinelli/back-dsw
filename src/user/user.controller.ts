@@ -28,7 +28,16 @@ export const UserSchema:Schema = {
         isEmail:true,
         notEmpty:true,
         normalizeEmail:true,
-        errorMessage:'An email is required and must be valid'
+        errorMessage:'An email is required and must be valid',
+        custom:   {
+            options: async (value:string) => {
+                const user = await userRepository.findByEmail(value);
+                if(user){
+                    throw new Error('Email already in use');
+                }
+                return true;
+            }
+        }
     },
     password:{
         isString:true,
@@ -42,8 +51,11 @@ export const UserSchema:Schema = {
     category:{
         notEmpty:{errorMessage:'Category is required'},
         custom:{
-            options: async (value:number) => {
-                const category = await em.findOne(Category,{id:value});
+            options: async (value:number|string) => {
+                if(typeof value !== 'number' && typeof value !== 'string'){
+                    throw new Error('Category must be a number or string');
+                }
+                const category = typeof value === 'number' ? await categoryRepository.findOne(value) : await categoryRepository.findByUsertype(value);
                 if(!category){
                     throw new Error('Category not found');
                 }
@@ -111,16 +123,7 @@ async function findOne(req: Request, res: Response): Promise<void> {
 async function add(req:Request, res: Response): Promise<void> {
     try {
         const user = req.body.sanitizedInput;
-        
-        // Verificar que el email no esté ya registrado
-        const existingUser = await userRepository.findByEmail(user.email);
-        if (existingUser) {
-            res.status(409).json({ 
-                message: "Email already exists" 
-            });
-            return;
-        }
-
+    
         // Hashear la contraseña antes de guardar
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(user.password, saltRounds);
@@ -222,4 +225,28 @@ async function promoteToBusinessOwner(req: Request, res: Response) {
     }
 }
 
-export { findAll, findOne, deleteUser, update, add, hasBusiness, promoteToBusinessOwner };
+async function register(req:Request, res:Response){ // sin middleware
+    try {
+        const user = req.body.sanitizedInput;
+    
+        // Hashear la contraseña antes de guardar
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(user.password, saltRounds);
+        user.password = hashedPassword;
+        user.category = await categoryRepository.findByUsertype(req.body.sanitizedInput.category);
+        const newUser = await userRepository.add(user);
+        const userResponse = { ...newUser, password: undefined }; // Excluir la contraseña del response
+        res.status(201).json({
+            message: "User created successfully",
+            data: userResponse
+        });
+
+    } catch(e) {
+        console.error('Error creating user:', e);
+        res.status(500).json({
+            message: e,
+            error: e
+        });
+    }
+}
+export { findAll, findOne, deleteUser, update, add, hasBusiness, promoteToBusinessOwner, register };
