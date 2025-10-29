@@ -23,14 +23,14 @@ export const PitchSchema:Schema = {
     size: {
         notEmpty: {errorMessage:'Must specify a size'},
         isIn: {
-            options: PITCH_SIZES,
+            options: [PITCH_SIZES],
             errorMessage: 'Pitch Size must be: ' + PITCH_SIZES
         }
     },
     groundType: {
         notEmpty: {errorMessage: 'Must specify a groundType'},
         isIn: {
-            options: GROUND_TYPES,
+            options: [GROUND_TYPES],
             errorMessage: 'Ground Type must be one of: ' + GROUND_TYPES
         }
     },

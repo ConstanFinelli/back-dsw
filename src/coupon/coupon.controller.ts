@@ -36,7 +36,7 @@ export const CouponSchema:Schema = {
         notEmpty: true,
         errorMessage: 'Must specify a status.',
         isIn: {
-            options: STATUS_VALUES,
+            options: [STATUS_VALUES],
             errorMessage: 'Status must be: ' + STATUS_VALUES
         }
     }

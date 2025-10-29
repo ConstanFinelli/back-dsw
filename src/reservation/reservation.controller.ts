@@ -86,7 +86,7 @@ export const ReservationSchema:Schema = {
   status: {
     notEmpty: { errorMessage: 'Must specify a status.' },
     isIn: {
-      options: STATUS_VALUES,
+      options: [STATUS_VALUES],
       errorMessage: 'Status must be: ' + STATUS_VALUES,
     },
   },
