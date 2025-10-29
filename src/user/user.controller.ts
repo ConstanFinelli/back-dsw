@@ -194,37 +194,6 @@ async function hasBusiness(req: Request, res: Response): Promise<void>{
     }
 }
 
-async function promoteToBusinessOwner(req: Request, res: Response) {
-    try {
-        const oId = Number(req.params.id);
-        if (!oId) {
-            res.status(400).send({ message: "User ID is required for promotion" });
-            return;
-        }
-        const owner = await userRepository.findOne(oId) as User
-        if(!owner){
-            res.status(404).send({ message: "User not found" });
-            return;
-        }
-        const ownerCat = await em.findOne(Category,{usertype: 'business_owner'}) as Category;
-        if(ownerCat){
-            owner.category = ownerCat;
-        }else{
-            res.status(404).send({ message: "Business owner category not found" });
-            return;
-        }
-        const updatedBusiness = await userRepository.update(owner);
-        if (!updatedBusiness) {
-            res.status(404).send({ message: "Business not found" });
-            return;
-        }
-        
-        res.send({ message: "Business activated successfully", data: updatedBusiness });
-    } catch (e) {
-        res.status(500).send({ message: e });
-    }
-}
-
 async function register(req:Request, res:Response){ // sin middleware
     try {
         const user = req.body.sanitizedInput;
@@ -249,4 +218,4 @@ async function register(req:Request, res:Response){ // sin middleware
         });
     }
 }
-export { findAll, findOne, deleteUser, update, add, hasBusiness, promoteToBusinessOwner, register };
+export { findAll, findOne, deleteUser, update, add, hasBusiness, register };

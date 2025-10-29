@@ -4,9 +4,13 @@ import { Request, Response } from "express";
 import orm from "../shared/db/orm.js";
 import { User } from "../user/user.entities.js";
 import { Locality } from "../locality/locality.entities.js";
+import { UserRepository } from "../user/user.repository.js";
+import { CategoryRepository } from "../category/category.repository.js";
 
 
 const businessRepository = new BusinessRepository();
+const userRepository = new UserRepository();
+const categoryRepository = new CategoryRepository();
 
 const em = orm.em.fork()
 
@@ -32,7 +36,7 @@ export const BusinessSchema:Schema = {
     }
   },
   averageRating: {
-    notEmpty: {errorMessage: 'Must specify an averageRating.'},
+    optional: true,
     isFloat: {
         options: {min:0.0, max:5.0},
         errorMessage: 'averageRating must be a float number between 0.0 and 5.0'
@@ -123,12 +127,13 @@ async function add(req: Request, res: Response) {
 
 async function update(req: Request, res: Response) {
     try {
-        const business = req.body.sanitizedInput;
-        if (!business.id) {
+        const businessId = req.params.id;
+        if (!businessId) {
             res.status(400).send({ message: "Business ID is required for update" });
             return;
         }
-        
+        const business = req.body.sanitizedInput;
+        business.id = Number(businessId);
         const updatedBusiness = await businessRepository.update(business);
         if (!updatedBusiness) {
             res.status(404).send({ message: "Business not found" });
@@ -217,7 +222,17 @@ async function activate(req: Request, res: Response) {
             res.status(404).send({ message: "Business not found" });
             return;
         }
-        
+
+        const oId = Number(business.owner?.id);
+        if (!oId) {
+            res.status(400).send({ message: "User ID is required for promotion" });
+            return;
+        };
+        const updatedUser = await userRepository.promote(oId);
+        if (!updatedUser) {
+            res.status(400).send({ message: "Could not promote user" });
+            return;
+        }
         res.send({ 
             message: "Business activated successfully", 
             data: updatedBusiness 

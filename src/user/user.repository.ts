@@ -1,3 +1,4 @@
+import { Category } from '../category/category.entities.js';
 import orm from '../shared/db/orm.js';
 import { User } from './user.entities.js';
 
@@ -55,6 +56,18 @@ export class UserRepository {
         user.phoneNumber = newUser.phoneNumber || user.phoneNumber;
         user.password = newUser.password || user.password;
         user.category = newUser.category || user.category;
+        await em.flush();
+        return user as User;
+        }
+    public async promote(id: number): Promise<User | undefined> {
+        if (!id) {
+            throw new Error('User ID is required for update');
+        }
+        const user = await this.findOne(id);
+        if (!user) {
+            return undefined;
+        }
+        user.category = await em.findOneOrFail(Category, { usertype: 'business_owner' });
         await em.flush();
         return user as User;
         }
