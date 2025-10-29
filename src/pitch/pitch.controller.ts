@@ -35,7 +35,11 @@ export const PitchSchema:Schema = {
         }
     },
     roof: {
-        notEmpty: {errorMessage: 'Must specify if roofed or not'},
+        exists: {
+            options: { checkFalsy: true },
+            errorMessage: 'Must specify if roofed or not'
+        },
+        toBoolean: true,
         isBoolean: {
             errorMessage: 'Roof must be a boolean value'
         }
