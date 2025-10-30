@@ -14,7 +14,7 @@ reservationRouter.get("/findOne/:id", authenticateWithCategories(['admin', 'busi
 
 reservationRouter.post("/add",  validateSchemaWithParams(ReservationSchema, allowedFields), add);
 
-reservationRouter.put("/update/:id", authenticateWithCategories(['admin']), validateSchemaWithParams(ReservationSchema, allowedFields), update);
+reservationRouter.put("/update/:id", authenticateWithCategories(['admin', 'business_owner']), validateSchemaWithParams(ReservationSchema, allowedFields), update);
 
 reservationRouter.put("/cancel/:id", authenticateWithCategories(['admin','user','business_owner']), cancel);
 

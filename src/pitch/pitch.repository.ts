@@ -42,6 +42,7 @@ export class PitchRepository {
         await em.flush()
         return updatedPitch as Pitch
     }
+    
     public async findAllFromActiveBusinesses():Promise<Pitch[] | undefined>{
         const em = orm.em.fork();
         const pitchs = await em.findAll(Pitch,{populate:['business'] });
