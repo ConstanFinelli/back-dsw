@@ -60,7 +60,12 @@ async function findOne(req: Request, res: Response) {
 
 async function update (req: Request, res: Response) {
     const repository = new LocalityRepository();
-    const locality = await repository.findOne(Number(req.params.id));
+    const localityFound = await repository.findOne(Number(req.params.id));
+    const locality = new Locality();
+    locality.id = Number(req.params.id);
+    locality.name = req.body.name;
+    locality.postal_code = req.body.postal_code;
+    locality.province = req.body.province;
     if (!locality) {
         res.status(404).send({ message: "Locality not found" });
         return;

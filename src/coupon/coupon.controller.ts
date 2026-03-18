@@ -13,20 +13,20 @@ export const CouponSchema:Schema = {
         errorMessage: 'Must specify a discount.',
         isFloat: {
             options: {min:0.0,max:1.0},
-            errorMessage: 'Discount must be a float number between 0.0 and 1.0.'
+            errorMessage: 'discount must be a float number between 0.0 and 1.0.'
         }
     },
-    expiringAt: {
+    expiringDate: {
         notEmpty: true,
         errorMessage: 'Must specify an expiring date.',
-        isDate: { errorMessage: 'Expiring date must be a valid date.' },
+        isDate: { errorMessage: 'expiringDate must be a valid date.' },
         custom: {
             options: (value) =>{
                 const date = new Date(value) // fecha en el json
                 const today = new Date() // fecha de hoy
 
                 if(date <= today){
-                    throw new Error('Expiring date must be future')
+                    throw new Error('expiringDate must be future')
                 }
                 return true
             }
