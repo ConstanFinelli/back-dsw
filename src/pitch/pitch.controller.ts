@@ -8,8 +8,6 @@ import { Schema } from 'express-validator';
 
 const repository = new PitchRepository();
 
-const em = orm.em.fork()
-
 const PITCH_SIZES = ['5v5', '7v7', '11v11']
 const GROUND_TYPES = ['césped natural', 'césped sintético', 'cemento', 'arcilla']
 
@@ -59,6 +57,7 @@ export const PitchSchema:Schema = {
         },
         custom: {
             options: async (value) => {
+                const em = orm.em.fork();
                 const business = await em.findOne(Business, {id: value});
                 if (!business) {
                     throw new Error('Could not find a business');
@@ -220,6 +219,7 @@ async function findByBusinessId(req: Request, res: Response): Promise<void> {
         res.status(500).json({ error: e.message });
     }
 }
+
 
 async function findAllFromActiveBusinesses(req: Request, res: Response): Promise<void> {
     try {
