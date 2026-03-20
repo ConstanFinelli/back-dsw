@@ -1,11 +1,12 @@
 import { Business } from "./business.entities.js";
 import orm from "../shared/db/orm.js";
+import { populate } from "dotenv";
 
 const em = orm.em;
 
 export class BusinessRepository {
     public async findAll(): Promise<Business[]> {
-        return await em.find(Business, {});
+        return await em.find(Business, {}, {populate: ['owner', 'locality']});
     }
 
     public async add(business: Business): Promise<Business> {
@@ -20,7 +21,7 @@ export class BusinessRepository {
     }
 
     public async findOne(id: number): Promise<Business | null> {
-        return await em.findOne(Business, { id });
+        return await em.findOne(Business, { id }, {populate: ['owner', 'locality']});
     }
 
     public async remove(id: number): Promise<Business | null> {

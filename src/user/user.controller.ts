@@ -74,14 +74,14 @@ async function findAll(req: Request, res: Response): Promise<void> {
     try {
         const users = await userRepository.findAll();
         
-        // Formatear la respuesta para excluir información sensible y mostrar categoryName
+        // Formatear la respuesta para excluir información sensible
         const usersResponse = users?.map(user => ({
             id: user.id,
             name: user.name,
             surname: user.surname,
             email: user.email,
             phoneNumber: user.phoneNumber,
-            categoryName: user.category?.usertype || 'Unknown',
+            category: user.category,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt
             // password se excluye intencionalmente
