@@ -16,6 +16,20 @@ export class ReservationRepository {
     return await em.findOneOrFail(Reservation, { id }, { populate: ['user', 'pitch'] });
   }
 
+  /** Devuelve true si la reserva pertenece al usuario (userId) */
+  public async isOwnedByUser(reservationId: number, userId: number): Promise<boolean> {
+    const em = orm.em.fork();
+    const reservation = await em.findOne(Reservation, { id: reservationId, user: userId });
+    return !!reservation;
+  }
+
+  /** Devuelve true si el owner del negocio de la pitch asociada es userId */
+  public async isOwnedByBusinessOwner(reservationId: number, userId: number): Promise<boolean> {
+    const em = orm.em.fork();
+    const reservation = await em.findOne(Reservation, { id: reservationId, pitch: { business: { owner: userId } } });
+    return !!reservation;
+  }
+
   public async findByBusiness(id: number): Promise<Reservation[]> {
     const em = orm.em.fork();
     return await em.find(Reservation, { pitch: { business: { id } } }, {
@@ -69,4 +83,7 @@ public async findOccupiedSlotsByPitch(id: number): Promise<{ ReservationDate: Da
         orderBy: { ReservationDate: 'asc' }
     });
 }
+
 }
+
+export const repository = new ReservationRepository();

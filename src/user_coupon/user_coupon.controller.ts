@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response, RequestHandler } from "express";
 import { UserCouponRepository } from "./user_coupon.repository.js";
+import { Roles } from '../constants/roles.js';
 
 const repository = new UserCouponRepository();
 
@@ -55,7 +56,7 @@ const findByUser: RequestHandler = async (req, res) => {
         // Validar que solo el usuario pueda ver sus propios cupones o que sea admin
         const authUserId = (req as any).body?.authenticatedUserId;
         const userRole = (req as any).body?.userRole;
-        if (authUserId && authUserId !== userId && userRole !== 'admin') {
+        if (authUserId && authUserId !== userId && userRole !== Roles.ADMIN) {
             res.status(403).send({ error: "No tienes permiso para ver estos cupones" });
             return;
         }
@@ -97,7 +98,7 @@ const updateStatus: RequestHandler = async (req, res) => {
         const { status } = req.body.sanitizedInput;
         
         // Validar que el usuario solo pueda actualizar sus propios cupones o que sea admin
-        if (req.body.authenticatedUserId && req.body.userRole !== 'admin') {
+        if (req.body.authenticatedUserId && req.body.userRole !== Roles.ADMIN) {
             const belongs = await repository.belongsToUser(id, req.body.authenticatedUserId);
             if (!belongs) {
                 res.status(403).send({ error: "No tienes permiso para actualizar este cupón" });

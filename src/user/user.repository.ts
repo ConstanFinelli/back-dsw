@@ -1,4 +1,5 @@
 import { Category } from '../category/category.entities.js';
+import { Roles } from '../constants/roles.js';
 import orm from '../shared/db/orm.js';
 import { User } from './user.entities.js';
 
@@ -67,7 +68,7 @@ export class UserRepository {
         if (!user) {
             return undefined;
         }
-        user.category = await em.findOneOrFail(Category, { usertype: 'business_owner' });
+        user.category = await em.findOneOrFail(Category, { usertype: Roles.OWNER });
         await em.flush();
         return user as User;
         }

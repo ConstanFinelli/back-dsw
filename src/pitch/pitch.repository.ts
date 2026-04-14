@@ -20,6 +20,14 @@ export class PitchRepository {
         const pitch = await em.findOneOrFail(Pitch, {id}, {populate:['business']})
         return pitch as Pitch
     }
+
+    /** Devuelve true si el `userId` es el owner del negocio asociado a la pitch */
+    public async isOwnedBy(pitchId: number, userId: number): Promise<boolean> {
+        const em = orm.em.fork();
+        // Buscar pitch cuyo business.owner tenga id = userId
+        const pitch = await em.findOne(Pitch, { id: pitchId, business: { owner: userId } });
+        return !!pitch;
+    }
     
     public async add(pitch:Pitch):Promise<Pitch | undefined>{
         const em = orm.em.fork(); // ← AGREGAR fork()
