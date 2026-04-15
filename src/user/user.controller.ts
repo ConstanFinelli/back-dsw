@@ -51,16 +51,19 @@ export const UserSchema:Schema = {
     category:{
         notEmpty:{errorMessage:'Category is required'},
         custom:{
-            options: async (value:number|string) => {
+            options: (value:number|string) => {
                 if(typeof value !== 'number' && typeof value !== 'string'){
                     throw new Error('Category must be a number or string');
                 }
-                const category = typeof value === 'number' ? await categoryRepository.findOne(value) : await categoryRepository.findByUsertype(value);
-                if(!category){
-                    throw new Error('Category not found');
-                }
                 return true;
             }
+        }
+    },
+    categoryId: {
+        optional: true,
+        isInt: {
+            options: { min: 1 },
+            errorMessage: 'CategoryId must be a positive integer'
         }
     },
     phoneNumber: {
@@ -69,6 +72,53 @@ export const UserSchema:Schema = {
         errorMessage: 'Phone number must be a string'
     },
     }
+};
+export const UserRegisterSchema: Schema = {
+    name: UserSchema.name,
+    surname: UserSchema.surname,
+    email: UserSchema.email,
+    password: UserSchema.password,
+    phoneNumber: UserSchema.phoneNumber,
+};
+export const UserUpdateSchema: Schema = {
+    name: { optional: true, isString: true, notEmpty: true, errorMessage: 'Name must be a non-empty string' },
+    surname: { optional: true, isString: true, notEmpty: true, errorMessage: 'Surname must be a non-empty string' },
+    email: {
+        optional: true,
+        isEmail: true,
+        normalizeEmail: true,
+        errorMessage: 'Email must be valid',
+        custom: {
+            options: async (value: string, { req }: any) => {
+                const user = await userRepository.findByEmail(value);
+                if (user && Number(req.params.id) !== user.id) {
+                    throw new Error('Email already in use');
+                }
+                return true;
+            }
+        }
+    },
+    password: { optional: true, isLength: { options: { min: 6 }, errorMessage: 'Password must be at least 6 characters long' } },
+    category: {
+        optional: true,
+        custom: {
+            options: (value:number|string) => {
+                if(value === undefined || value === null || value === '') return true;
+                if(typeof value !== 'number' && typeof value !== 'string'){
+                    throw new Error('Category must be a number or string');
+                }
+                return true;
+            }
+        }
+    },
+    categoryId: {
+        optional: true,
+        isInt: {
+            options: { min: 1 },
+            errorMessage: 'CategoryId must be a positive integer'
+        }
+    },
+    phoneNumber: UserSchema.phoneNumber,
 };
 async function findAll(req: Request, res: Response): Promise<void> {
     try {
@@ -161,21 +211,29 @@ async function deleteUser(req: Request, res: Response): Promise<void> {
 async function update(req: Request, res: Response): Promise<void> {
     try {
         const userId = Number(req.params.id);
-        
+
         if (isNaN(userId) || userId <= 0) {
             res.status(400).send({ message: "Invalid user ID" });
             return;
         }
-        const result = await userRepository.update(req.body.sanitizedInput);
-        
+
+        const input = req.body.sanitizedInput || {};
+        // ensure id is present for repository.update
+        input.id = userId;
+
+        // category mapping is handled by the validation middleware; `sanitizedInput` contains the resolved `category` entity if provided
+
+        const result = await userRepository.update(input);
+
         res.send({ 
             message: "User updated successfully", 
             data: result,
         });
     } catch (e) {
+        console.error('Error updating user:', e);
         res.status(500).send({ message: "Internal server error" });
     }
-}   
+}
 
 async function hasBusiness(req: Request, res: Response): Promise<void>{
     const owner = await userRepository.findOne(Number(req.params.id))
@@ -197,12 +255,20 @@ async function hasBusiness(req: Request, res: Response): Promise<void>{
 async function register(req:Request, res:Response){ // sin middleware
     try {
         const user = req.body.sanitizedInput;
-    
+
         // Hashear la contraseña antes de guardar
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(user.password, saltRounds);
         user.password = hashedPassword;
-        user.category = await categoryRepository.findByUsertype(req.body.sanitizedInput.category);
+
+        // Asignar categoría por defecto 'user' en el servidor
+        const defaultCategory = await categoryRepository.findByUsertype('user');
+        if(!defaultCategory){
+            res.status(500).json({ message: "Default category 'user' not found" });
+            return;
+        }
+        user.category = defaultCategory;
+
         const newUser = await userRepository.add(user);
         const userResponse = { ...newUser, password: undefined }; // Excluir la contraseña del response
         res.status(201).json({
@@ -213,7 +279,7 @@ async function register(req:Request, res:Response){ // sin middleware
     } catch(e) {
         console.error('Error creating user:', e);
         res.status(500).json({
-            message: e,
+            message: "Internal server error",
             error: e
         });
     }

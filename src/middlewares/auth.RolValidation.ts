@@ -4,6 +4,7 @@ import { Pitch } from '../pitch/pitch.entities.js';
 import { Reservation } from '../reservation/reservation.entities.js';
 import { repository as pitchRepository } from '../pitch/pitch.repository.js';
 import { repository as reservationRepository } from '../reservation/reservation.repository.js';
+import { BusinessRepository } from '../business/business.repository.js';
 import { AuthenticatedRequest } from './auth.middleware.js';
 import { Roles } from '../constants/roles.js';
 
@@ -112,8 +113,49 @@ export async function verifyReservationOwnership(req: AuthenticatedRequest, res:
   }
 }
 
+export async function verifyBusinessOwnership(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  if (!req.user) {
+    res.status(401).json({ message: 'Unauthenticated' });
+    return;
+  }
+
+  const id = Number(req.params.id || req.body.id);
+  if (!id) {
+    res.status(400).json({ message: 'Business id is required' });
+    return;
+  }
+
+  try {
+    const repository = new BusinessRepository();
+    const exists = await repository.findOne(id).catch(() => null);
+    if (!exists) {
+      res.status(404).json({ message: 'Business not found' });
+      return;
+    }
+
+    if (req.user.category === Roles.ADMIN) {
+      next();
+      return;
+    }
+
+    const ownerId = Number(exists.owner?.id);
+    if (ownerId && ownerId === req.user.id) {
+      next();
+      return;
+    }
+
+    res.status(403).json({ message: 'Forbidden. Not business owner' });
+    return;
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+    return;
+  }
+}
+
 export default {
   requireRoles,
   verifyPitchOwnership,
   verifyReservationOwnership,
+  verifyBusinessOwnership,
 };

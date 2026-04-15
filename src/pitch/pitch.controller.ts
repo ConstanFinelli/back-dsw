@@ -191,6 +191,7 @@ async function remove(req: Request, res: Response): Promise<void> {
 
 async function findAll(req: Request, res: Response): Promise<void> {
     try {
+        // Devolver todas las pitches (sin filtros) para este endpoint
         const pitchs = await repository.findAll();
         res.status(200).json({ data: pitchs });
     } catch (e: any) {
@@ -223,13 +224,24 @@ async function findByBusinessId(req: Request, res: Response): Promise<void> {
 
 async function findAllFromActiveBusinesses(req: Request, res: Response): Promise<void> {
     try {
+        // Leer filtros desde query params y aplicar filtrado solo sobre negocios activos
+        const filters = { ...req.query } as any;
+        const page = Number(filters.page) || 1;
+        const limit = Math.min(Number(filters.limit) || 20, 100);
+
+        if ((repository as any).findFilteredActive) {
+            console.log('GET /api/pitchs/getAllFromActiveBusinesses filters:', filters);
+            const result = await (repository as any).findFilteredActive(filters);
+            res.status(200).json({ data: result.data, meta: { total: result.total, page, limit, filters } });
+            return;
+        }
+
+        // Fallback: comportamiento previo (filtrado en memoria por business.active)
         const pitchs = await repository.findAllFromActiveBusinesses();
-        
         if (!pitchs || pitchs.length === 0) {
             res.status(404).json({ error: 'No pitches from active businesses' });
             return;
         }
-        
         res.status(200).json({ data: pitchs });
     } catch (e: any) {
         res.status(500).json({ error: e.message });

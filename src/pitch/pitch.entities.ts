@@ -1,4 +1,4 @@
-import { FloatType, Rel, Collection, Entity, ManyToOne, OneToMany, PrimaryKey, Property } from "@mikro-orm/core"
+import { Rel, Collection, Entity, ManyToOne, OneToMany, PrimaryKey, Property } from "@mikro-orm/core"
 import { Reservation } from "../reservation/reservation.entities.js"
 import { Business } from "../business/business.entities.js"
 
@@ -19,8 +19,8 @@ export class Pitch{
     @Property()
     roof!:boolean
 
-    @Property()
-    price = new FloatType; // para registrarlo como float, si no lo redondea
+    @Property({ type: 'decimal', precision: 10, scale: 2, columnType: 'decimal(10,2)' })
+    price!: number; // almacenado como DECIMAL(10,2)
 
     @OneToMany(() => Reservation, (reservation) => reservation.pitch) 
     reservations = new Collection<Reservation>(this);
