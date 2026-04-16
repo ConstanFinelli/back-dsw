@@ -48,7 +48,7 @@ export const ReservationSchema:Schema = {
           }
         const openedTime = pitch.business.openingAt; 
         const closedTime = pitch.business.closingAt;
-        const reservation = await em.findOne(Reservation, { ReservationTime: value, ReservationDate: req.body.ReservationDate, pitch: pitchId });
+        const reservation = await em.findOne(Reservation, { ReservationTime: value, ReservationDate: req.body.ReservationDate, pitch: pitchId, status: { $ne: 'cancelada' } });
         if (reservation) {
           throw new Error('The selected time slot is already booked for this pitch.');
         }
@@ -115,19 +115,49 @@ async function findAllFromUser(req: Request, res: Response) {
 async function findByBusiness(req: Request, res: Response) {
   try {
     const businessId = Number(req.params.businessId);
-    
+
     if (!businessId) {
       res.status(400).json({ error: 'Business ID is required' });
       return;
     }
-    
-    const reservations = await repository.findByBusiness(businessId);
-    
+
+    // Read query params
+    const startDateRaw = req.query.startDate;
+    const endDateRaw = req.query.endDate;
+    const statusRaw = req.query.status;
+
+    const startDate = typeof startDateRaw === 'string' ? startDateRaw : undefined;
+    const endDate = typeof endDateRaw === 'string' ? endDateRaw : undefined;
+
+    let status: string | string[] | undefined;
+    if (Array.isArray(statusRaw)) {
+      status = statusRaw as string[];
+    } else if (typeof statusRaw === 'string') {
+      status = statusRaw;
+    }
+
+    // validate dates if provided
+    if (startDate && Number.isNaN(Date.parse(startDate))) {
+      res.status(400).json({ error: 'Invalid startDate. Use ISO format YYYY-MM-DD' });
+      return;
+    }
+    if (endDate && Number.isNaN(Date.parse(endDate))) {
+      res.status(400).json({ error: 'Invalid endDate. Use ISO format YYYY-MM-DD' });
+      return;
+    }
+
+    const filters: any = {};
+    if (startDate) filters.startDate = startDate;
+    if (endDate) filters.endDate = endDate;
+    if (status !== undefined) filters.status = status;
+
+    const reservations = await repository.findByBusiness(businessId, Object.keys(filters).length ? filters : undefined);
+
     if (!reservations || reservations.length === 0) {
       res.status(404).json({ error: 'No reservations found for this business' });
       return;
     }
-    
+
     res.status(200).json({ data: reservations });
   } catch (e: any) {
     res.status(500).json({ error: e.message });

@@ -30,9 +30,43 @@ export class ReservationRepository {
     return !!reservation;
   }
 
-  public async findByBusiness(id: number): Promise<Reservation[]> {
+  public async findByBusiness(id: number, filters?: { startDate?: string; endDate?: string; status?: string | string[] }): Promise<Reservation[]> {
     const em = orm.em.fork();
-    return await em.find(Reservation, { pitch: { business: { id } } }, {
+    const where: any = { pitch: { business: { id } } };
+
+    if (filters) {
+      // date range
+      if (filters.startDate || filters.endDate) {
+        const dateCond: any = {};
+        if (filters.startDate) {
+          const sd = new Date(filters.startDate);
+          sd.setHours(0, 0, 0, 0);
+          dateCond.$gte = sd;
+        }
+        if (filters.endDate) {
+          const ed = new Date(filters.endDate);
+          ed.setHours(23, 59, 59, 999);
+          dateCond.$lte = ed;
+        }
+        where.ReservationDate = dateCond;
+      }
+
+      // status (single, comma-separated or repeated param => array)
+      if (filters.status !== undefined) {
+        if (Array.isArray(filters.status)) {
+          where.status = { $in: filters.status };
+        } else if (typeof filters.status === 'string') {
+          const parts = filters.status.split(',').map((s) => s.trim()).filter(Boolean);
+          if (parts.length > 1) {
+            where.status = { $in: parts };
+          } else {
+            where.status = parts[0];
+          }
+        }
+      }
+    }
+
+    return await em.find(Reservation, where, {
       populate: ['user', 'pitch'],
       orderBy: { ReservationDate: 'asc' }
     });
@@ -77,7 +111,8 @@ public async findOccupiedSlotsByPitch(id: number): Promise<{ ReservationDate: Da
     
     return await em.find(Reservation, { 
         pitch: { id },
-        ReservationDate: { $gte: today }
+    ReservationDate: { $gte: today },
+    status: { $ne: 'cancelada' }
     }, {
         fields: ['ReservationDate', 'ReservationTime'], // ✅ Solo campos necesarios
         orderBy: { ReservationDate: 'asc' }
