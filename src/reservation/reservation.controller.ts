@@ -97,7 +97,7 @@ async function findAll(req: Request, res: Response) {
     const reservations = await repository.findAll();
     res.send({ data: reservations });
   } catch (e) {
-    res.status(500).send({ error: e });
+    res.status(500).send({ error: e instanceof Error ? e.message : String(e) });
   }
 }
 
@@ -169,7 +169,7 @@ async function findOne(req: Request, res: Response) {
     const reservation = await repository.findOne(Number.parseInt(req.params.id));
     res.send({ data: reservation });
   } catch (e) {
-    res.status(404).send({ error: e });
+    res.status(500).send({ error: e instanceof Error ? e.message : String(e) });
   }
 }
 
@@ -185,7 +185,7 @@ async function add(req: Request, res: Response) {
 async function remove(req: Request, res: Response) {
   try {
     const reservation = await repository.remove(Number.parseInt(req.params.id));
-    res.send({ removedReservation: reservation });
+    res.send({ message: "Reservation removed successfully", data: reservation });
   } catch (e: any) {
     res.status(400).send({ error: e.message });
   }
@@ -197,7 +197,7 @@ async function update(req: Request, res: Response) {
       Number.parseInt(req.params.id),
       req.body.sanitizedInput
     );
-    res.send({ updatedReservation: reservation });
+    res.send({ message: "Reservation updated successfully", data: reservation });
   } catch (e: any) {
     res.status(400).send({ error: e.message });
   }
@@ -217,7 +217,7 @@ async function cancel(req: Request, res: Response) {
   try {
     const reservation = await repository.cancel(
       Number.parseInt(req.params.id));
-    res.send({ canceledReservation: reservation });
+    res.send({ message: "Reservation canceled successfully", data: reservation });
   } catch (e: any) {
     res.status(400).send({ error: e.message });
   }

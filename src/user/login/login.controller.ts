@@ -12,7 +12,8 @@ const em = orm.em.fork()
 
 export async function login(req:Request, res:Response){
     if(!req.body.email || !req.body.password){
-        res.status(401).send({error:'Indicar mail y/o contraseña'})
+        res.status(400).send({error:'Indicar mail y/o contraseña'})
+        return;
     } // verifica campos vacios
 
     const toLog = new User();
@@ -32,5 +33,5 @@ export async function login(req:Request, res:Response){
         return
     }
     const token = createToken(userFound) 
-    res.status(201).send({token}) // crea y devuelve el token
+    res.status(201).send({ data: { token } }) // crea y devuelve el token
 }

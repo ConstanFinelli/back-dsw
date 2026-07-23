@@ -12,7 +12,7 @@ const findAll: RequestHandler = async (req, res) => {
         const userCoupons = await repository.findAll();
         res.status(200).send({ data: userCoupons });
     } catch (e) {
-        res.status(404).send({ message: e });
+        res.status(500).send({ message: e instanceof Error ? e.message : String(e) });
     }
 }
 
@@ -121,7 +121,7 @@ const remove: RequestHandler = async (req, res) => {
     try {
         const id = Number.parseInt(req.params.id);
         const userCoupon = await repository.remove(id);
-    res.status(200).send({ removedUserCoupon: userCoupon, message: "Asignación eliminada exitosamente" });
+    res.status(200).send({ message: "Asignación eliminada exitosamente", data: userCoupon });
     return;
     } catch (e: any) {
         res.status(400).send({ error: e.message });

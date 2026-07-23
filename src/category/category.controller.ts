@@ -106,7 +106,7 @@ const update: RequestHandler = async (req, res) => {
       res.status(404).send({ message: "Category not found", data: null });
       return;
     }
-    res.status(200).send({ message: "Category updated successfully", category: result });
+    res.status(200).send({ message: "Category updated successfully", data: result });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "Unexpected error";
     res.status(500).send({ message });

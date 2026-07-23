@@ -205,7 +205,7 @@ async function deleteUser(req: Request, res: Response): Promise<void> {
         }
         res.send({ message: "User removed successfully" });
     } catch (e) {
-        res.send({ message: e });
+        res.status(500).send({ message: e instanceof Error ? e.message : String(e) });
     }
 }
 async function update(req: Request, res: Response): Promise<void> {
@@ -240,10 +240,10 @@ async function hasBusiness(req: Request, res: Response): Promise<void>{
     if(owner){
         const business = await em.findOne(Business,{owner:owner})
         if(business){
-            res.send({response:true})
+            res.send({ data: { hasBusiness: true } })
             return
         }else{
-            res.send({response:false})
+            res.send({ data: { hasBusiness: false } })
             return
         }
     }else{

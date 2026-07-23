@@ -48,7 +48,7 @@ async function findAll(req:Request, res:Response){
         res.status(200).send({data:coupons})
     }
     catch(e){
-        res.status(404).send({message:e})
+        res.status(500).send({message: e instanceof Error ? e.message : String(e)})
     }
 }
 
@@ -57,7 +57,7 @@ async function findOne(req:Request, res:Response){
         const coupon = await repository.findOne(Number.parseInt(req.params.id))
         res.status(200).send({data:coupon})
     }catch(e){
-        res.status(404).send({error:e})
+        res.status(500).send({error: e instanceof Error ? e.message : String(e)})
     }
 }
 
@@ -66,25 +66,25 @@ async function add(req:Request, res:Response){
         const coupon = await repository.add(req.body.sanitizedInput)
         res.status(201).send({data:coupon})
     }catch(e:any){
-        res.status(400).send({error:e})
+        res.status(400).send({error: e instanceof Error ? e.message : String(e)})
     }
 }
 
 async function remove(req:Request, res:Response){
     try{
         const coupon = await repository.remove(Number.parseInt(req.params.id))
-        res.status(200).send({removedCoupon:coupon})
+        res.status(200).send({ message: "Coupon deleted successfully", data: coupon })
     }catch(e:any){
-        res.status(400).send({error:e})
+        res.status(400).send({error: e instanceof Error ? e.message : String(e)})
     }
 }
 
 async function update(req:Request, res:Response){
     try{
         const coupon = await repository.update(Number.parseInt(req.params.id) ,req.body.sanitizedInput)
-        res.status(200).send({updatedCoupon:coupon})
+        res.status(200).send({ data: coupon })
     }catch(e:any){
-        res.status(400).send({error:e})
+        res.status(400).send({error: e instanceof Error ? e.message : String(e)})
     }
 }
 

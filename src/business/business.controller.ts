@@ -94,7 +94,7 @@ async function findAll(req: Request, res: Response) {
         const businesses = await businessRepository.findAll();
         res.send({ data: businesses });
     } catch (e) {
-        res.status(500).send({ message: e });
+        res.status(500).send({ message: e instanceof Error ? e.message : String(e) });
     }
 }
 
@@ -107,7 +107,7 @@ async function findOne(req: Request, res: Response) {
         }
         res.send({ data: business });
     } catch (e) {
-        res.status(500).send({ message: e });
+        res.status(500).send({ message: e instanceof Error ? e.message : String(e) });
     }
 }
 
@@ -142,7 +142,7 @@ async function update(req: Request, res: Response) {
         
         res.send({ message: "Business updated successfully", data: updatedBusiness });
     } catch (e) {
-        res.status(500).send({ message: e });
+        res.status(500).send({ message: e instanceof Error ? e.message : String(e) });
     }
 }
 
@@ -155,7 +155,7 @@ async function remove(req: Request, res: Response) {
         }
         res.send({ message: "Business removed successfully" });
     } catch (e) {
-        res.status(500).send({ message: e });
+        res.status(500).send({ message: e instanceof Error ? e.message : String(e) });
     }
 }
 
@@ -173,7 +173,7 @@ async function findInactive(req: Request, res: Response) {
         }
         res.send({ data: inactive });
     } catch (e) {
-        res.status(500).send({ message: e });
+        res.status(500).send({ message: e instanceof Error ? e.message : String(e) });
     }
 }
 
@@ -238,7 +238,7 @@ async function activate(req: Request, res: Response) {
             data: updatedBusiness 
         });
     } catch (e) {
-        res.status(500).send({ message: e });
+        res.status(500).send({ message: e instanceof Error ? e.message : String(e) });
     }
 }
 

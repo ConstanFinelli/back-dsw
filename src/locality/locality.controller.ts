@@ -34,57 +34,79 @@ export const LocalitySchema:Schema = {
 }
 
 async function findAll(req: Request, res: Response) {
-    const repository = new LocalityRepository();
-    res.send(await repository.findAll());
+    try {
+        const repository = new LocalityRepository();
+        const localities = await repository.findAll();
+        res.send({ data: localities });
+    } catch (e) {
+        res.status(500).send({ message: e instanceof Error ? e.message : String(e) });
+    }
 }
 
 async function add(req: Request, res: Response) {
-    const repository = new LocalityRepository();
-    const locality = new Locality();
-    locality.name = req.body.name;
-    locality.postal_code = req.body.postal_code;
-    locality.province = req.body.province;
+    try {
+        const repository = new LocalityRepository();
+        const locality = new Locality();
+        locality.name = req.body.name;
+        locality.postal_code = req.body.postal_code;
+        locality.province = req.body.province;
 
-    await repository.add(locality);
-    res.status(201).send({ message: "Locality created successfully", data: locality });
+        await repository.add(locality);
+        res.status(201).send({ message: "Locality created successfully", data: locality });
+    } catch (e) {
+        res.status(500).send({ message: e instanceof Error ? e.message : String(e) });
+    }
 }
 
 async function findOne(req: Request, res: Response) {
-    const repository = new LocalityRepository();
-    const locality = await repository.findOne(Number(req.params.id));
-    if (!locality) {
-        res.status(404).send({ message: "Locality not found" });
+    try {
+        const repository = new LocalityRepository();
+        const locality = await repository.findOne(Number(req.params.id));
+        if (!locality) {
+            res.status(404).send({ message: "Locality not found" });
+            return;
+        }
+        res.send({ data: locality });
+    } catch (e) {
+        res.status(500).send({ message: e instanceof Error ? e.message : String(e) });
     }
-    res.send(locality);
 }
 
 async function update (req: Request, res: Response) {
-    const repository = new LocalityRepository();
-    const localityFound = await repository.findOne(Number(req.params.id));
-    const locality = new Locality();
-    locality.id = Number(req.params.id);
-    locality.name = req.body.name;
-    locality.postal_code = req.body.postal_code;
-    locality.province = req.body.province;
-    if (!locality) {
-        res.status(404).send({ message: "Locality not found" });
-        return;
-    }
+    try {
+        const repository = new LocalityRepository();
+        const localityFound = await repository.findOne(Number(req.params.id));
+        if (!localityFound) {
+            res.status(404).send({ message: "Locality not found" });
+            return;
+        }
+        const locality = new Locality();
+        locality.id = Number(req.params.id);
+        locality.name = req.body.name;
+        locality.postal_code = req.body.postal_code;
+        locality.province = req.body.province;
 
-    await repository.update(locality);
-    res.send({ message: "Locality updated successfully", data: locality });
+        await repository.update(locality);
+        res.send({ message: "Locality updated successfully", data: locality });
+    } catch (e) {
+        res.status(500).send({ message: e instanceof Error ? e.message : String(e) });
+    }
 }
 
 async function remove(req: Request, res: Response) {
-    const repository = new LocalityRepository();
-    const locality = await repository.findOne(Number(req.params.id));
-    if (!locality) {
-        res.status(404).send({ message: "Locality not found" });
-        return;
-    }
+    try {
+        const repository = new LocalityRepository();
+        const locality = await repository.findOne(Number(req.params.id));
+        if (!locality) {
+            res.status(404).send({ message: "Locality not found" });
+            return;
+        }
 
-    await repository.remove(locality.id);
-    res.send({ message: "Locality removed successfully" });
+        await repository.remove(locality.id);
+        res.send({ message: "Locality removed successfully" });
+    } catch (e) {
+        res.status(500).send({ message: e instanceof Error ? e.message : String(e) });
+    }
 }
 
 export { findAll, add, findOne, update, remove }
