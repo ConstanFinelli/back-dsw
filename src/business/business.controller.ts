@@ -6,6 +6,7 @@ import { User } from "../user/user.entities.js";
 import { Locality } from "../locality/locality.entities.js";
 import { UserRepository } from "../user/user.repository.js";
 import { CategoryRepository } from "../category/category.repository.js";
+import { Roles } from '../constants/roles.js';
 
 
 const businessRepository = new BusinessRepository();
@@ -223,15 +224,26 @@ async function activate(req: Request, res: Response) {
             return;
         }
 
+        // FIX: Solo promover si el usuario NO es admin
         const oId = Number(business.owner?.id);
         if (!oId) {
             res.status(400).send({ message: "User ID is required for promotion" });
             return;
-        };
-        const updatedUser = await userRepository.promote(oId);
-        if (!updatedUser) {
-            res.status(400).send({ message: "Could not promote user" });
+        }
+
+        const ownerUser = await userRepository.findOne(oId);
+        if (!ownerUser) {
+            res.status(400).send({ message: "Could not find owner user" });
             return;
+        }
+
+        // Solo promover si el usuario NO es admin (los admins ya tienen acceso total)
+        if (ownerUser.category?.usertype !== Roles.ADMIN) {
+            const updatedUser = await userRepository.promote(oId);
+            if (!updatedUser) {
+                res.status(400).send({ message: "Could not promote user" });
+                return;
+            }
         }
         res.send({ 
             message: "Business activated successfully", 

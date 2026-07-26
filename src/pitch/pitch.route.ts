@@ -12,7 +12,7 @@ const allowedFields = ['rating', 'size', 'groundType', 'roof', 'price', 'busines
 
 // Rutas
 pitchRouter.get('/getAll', findAll);
-pitchRouter.get('/getByBusiness/:businessId', authenticateWithCategories([Roles.OWNER]), findByBusinessId);
+pitchRouter.get('/getByBusiness/:businessId', authenticateWithCategories([Roles.ADMIN, Roles.OWNER]), findByBusinessId);
 pitchRouter.get('/getOne/:id', findOne);
 pitchRouter.get('/getAllFromActiveBusinesses', findAllFromActiveBusinesses);
 pitchRouter.post('/add', authenticateWithCategories([Roles.ADMIN, Roles.OWNER]), uploadPitchFields, validateSchemaWithParams(PitchSchema, allowedFields), add);
