@@ -1,34 +1,25 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { ReservationRepository } from "./reservation.repository.js";
 import orm from "../shared/db/orm.js";
 import { Reservation } from "./reservation.entities.js";
 import { User } from "../user/user.entities.js";
 import { Pitch } from "../pitch/pitch.entities.js";
+import { PitchRepository } from "../pitch/pitch.repository.js";
+import { BusinessRepository } from "../business/business.repository.js";
 import { Schema } from "express-validator";
 
 const repository = new ReservationRepository();
 
 const em = orm.em.fork();
 
-const STATUS_VALUES = ['pendiente', 'en curso', 'cancelada', 'completada'];
+const STATUS_VALUES = ['pendiente', 'en curso', 'cancelada', 'completada', 'ausente'];
 
 export const ReservationSchema:Schema = {
   ReservationDate: {
     notEmpty: { errorMessage: 'Must specify a ReservationDate.' },
     isDate: { 
       errorMessage: 'ReservationDate must be a valid date.'
-     },
-     custom: {
-            options: (value) =>{
-                const date = new Date(value) // fecha en el json
-                const today = new Date() // fecha de hoy
-
-                if(date <= today){
-                    throw new Error('ReservationDate must be future')
-                }
-                return true
-            }
-        }
+     }
   },
   ReservationTime: {
     notEmpty: { errorMessage: 'Must specify a ReservationTime.' },
@@ -46,15 +37,49 @@ export const ReservationSchema:Schema = {
         if (!pitch) {
             throw new Error('Could not find a pitch to validate ReservationTime.');
           }
-        const openedTime = pitch.business.openingAt; 
-        const closedTime = pitch.business.closingAt;
+
         const reservation = await em.findOne(Reservation, { ReservationTime: value, ReservationDate: req.body.ReservationDate, pitch: pitchId, status: { $ne: 'cancelada' } });
         if (reservation) {
           throw new Error('The selected time slot is already booked for this pitch.');
         }
-        if (value < openedTime || value > closedTime) {
-          throw new Error(`ReservationTime must be within business hours: ${openedTime} - ${closedTime}.`);
+
+        // Validar contra schedule del negocio
+        const schedule = pitch.business.schedule as { day: number; open: string | null; close: string | null }[] | null;
+        if (!schedule || schedule.length !== 7) {
+          throw new Error('El negocio no tiene horarios configurados.');
         }
+
+        // Obtener día de la semana de la reserva (1=lunes, 7=domingo)
+        const reserveDate = new Date(req.body.ReservationDate + 'T00:00:00');
+        const jsDay = reserveDate.getDay(); // 0=domingo, 1=lunes, ..., 6=sábado
+        const scheduleDay = jsDay === 0 ? 7 : jsDay; // Convertir a 1=lunes, 7=domingo
+
+        const daySchedule = schedule.find(s => s.day === scheduleDay);
+        if (!daySchedule || daySchedule.open === null || daySchedule.close === null) {
+          throw new Error('El negocio está cerrado ese día.');
+        }
+
+        // Validar que la hora esté dentro del horario
+        const [reserveH, reserveM] = value.split(':').map(Number);
+        const [openH, openM] = daySchedule.open.split(':').map(Number);
+        const [closeH, closeM] = daySchedule.close.split(':').map(Number);
+
+        const reserveMinutes = reserveH * 60 + reserveM;
+        const openMinutes = openH * 60 + openM;
+        const closeMinutes = closeH * 60 + closeM;
+
+        if (closeMinutes < openMinutes) {
+          // Horario que cruza medianoche (ej: 08:00 - 02:00)
+          if (reserveMinutes < openMinutes && reserveMinutes >= closeMinutes) {
+            throw new Error(`ReservationTime must be within business hours: ${daySchedule.open} - ${daySchedule.close}.`);
+          }
+        } else {
+          // Horario normal
+          if (reserveMinutes < openMinutes || reserveMinutes >= closeMinutes) {
+            throw new Error(`ReservationTime must be within business hours: ${daySchedule.open} - ${daySchedule.close}.`);
+          }
+        }
+
         return true;
       }
     }
@@ -90,6 +115,34 @@ export const ReservationSchema:Schema = {
       errorMessage: 'Status must be: ' + STATUS_VALUES,
     },
   },
+};
+
+export const validateDateTime = (req: Request, res: Response, next: NextFunction) => {
+    const { ReservationDate, ReservationTime } = req.body;
+    
+    if (!ReservationDate || !ReservationTime) {
+        next();
+        return;
+    }
+    
+    try {
+        const [hours, minutes] = ReservationTime.split(':').map(Number);
+        const reserveDate = new Date(ReservationDate + 'T00:00:00');
+        reserveDate.setHours(hours, minutes, 0, 0);
+        
+        const now = new Date();
+        
+        if (reserveDate <= now) {
+            res.status(400).json({ 
+                message: 'El horario de reserva ya pasó. Por favor seleccioná una fecha y hora futuras.' 
+            });
+            return;
+        }
+        
+        next();
+    } catch (error) {
+        res.status(400).json({ message: 'Fecha u hora inválida' });
+    }
 };
 
 async function findAll(req: Request, res: Response) {
@@ -221,6 +274,65 @@ async function cancel(req: Request, res: Response) {
   } catch (e: any) {
     res.status(400).send({ error: e.message });
   }
+}
+
+export async function rate(req: Request, res: Response) {
+    try {
+        const rating = Number(req.body.rating);
+        
+        // Validar rating
+        if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+            res.status(400).json({ message: 'Rating must be an integer between 1 and 5' });
+            return;
+        }
+
+        const em = orm.em.fork();
+        const reservation = await em.findOne(
+            Reservation,
+            { id: Number(req.params.id) },
+            { populate: ['pitch.business', 'user'] }
+        );
+
+        if (!reservation) {
+            res.status(404).json({ message: 'Reservation not found' });
+            return;
+        }
+
+        // Validar ownership
+        const userId = (req as any).user?.id;
+        if (reservation.user.id !== userId && (req as any).user?.category !== 'admin') {
+            res.status(403).json({ message: 'Unauthorized' });
+            return;
+        }
+
+        // Validar status
+        if (reservation.status !== 'completada') {
+            res.status(400).json({ message: 'Can only rate completed reservations' });
+            return;
+        }
+
+        // Validar que no esté ya calificada
+        if (reservation.pitchRating !== null && reservation.pitchRating !== undefined) {
+            res.status(400).json({ message: 'Reservation already rated' });
+            return;
+        }
+
+        // Actualizar rating
+        reservation.pitchRating = rating;
+        await em.flush();
+
+        // Recalcular Pitch.rating
+        const pitchRepository = new PitchRepository();
+        await pitchRepository.updateRating(reservation.pitch.id!);
+
+        // Recalcular Business.averageRating
+        const businessRepository = new BusinessRepository();
+        await businessRepository.updateAverageRating(reservation.pitch.business.id!);
+
+        res.json(reservation);
+    } catch (error) {
+        res.status(500).json({ message: 'Error rating reservation', error });
+    }
 }
 
 export {

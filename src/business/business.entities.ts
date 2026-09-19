@@ -35,9 +35,6 @@ export class Business {
   @Property({ nullable: true})
   activatedAt!: Date;
 
-  @Property()
-  openingAt!: String;
-
-  @Property()
-  closingAt!: String;
+  @Property({ type: 'json', nullable: true })
+  schedule: { day: number; open: string | null; close: string | null }[] = [];
 }

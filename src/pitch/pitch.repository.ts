@@ -1,6 +1,7 @@
 import {Pitch} from './pitch.entities.js'
 import orm from '../shared/db/orm.js';
 import { FilterQuery } from '@mikro-orm/core';
+import { Reservation } from '../reservation/reservation.entities.js';
 
 export class PitchRepository {
     public async findAll():Promise<Pitch[] | undefined>{
@@ -131,6 +132,31 @@ export class PitchRepository {
         return { data: data as Pitch[], total };
     }
     
+    /**
+     * Recalcula el rating de una cancha a partir del promedio de pitchRating
+     * de sus reservas completadas con rating.
+     */
+    public async updateRating(pitchId: number): Promise<void> {
+        const em = orm.em.fork();
+
+        // Calcular promedio de pitchRating de reservas completadas
+        const reservations = await em.find(Reservation, {
+            pitch: pitchId,
+            status: 'completada',
+            pitchRating: { $ne: null } as any,
+        });
+
+        const ratedReservations = reservations.filter(r => r.pitchRating != null);
+        const avgRating = ratedReservations.length > 0
+            ? ratedReservations.reduce((sum, r) => sum + (r.pitchRating ?? 0), 0) / ratedReservations.length
+            : 0;
+
+        // Actualizar Pitch.rating
+        const pitch = await em.findOneOrFail(Pitch, { id: pitchId });
+        pitch.rating = Math.round(avgRating * 10) / 10;
+        await em.flush();
+    }
+
     /**
      * Filtrado para pitches cuyo negocio está activo.
      * Similar a `findFiltered` pero fuerza `business.active = true`.

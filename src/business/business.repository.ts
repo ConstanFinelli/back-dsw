@@ -1,4 +1,5 @@
 import { Business } from "./business.entities.js";
+import { Pitch } from "../pitch/pitch.entities.js";
 import orm from "../shared/db/orm.js";
 import { populate } from "dotenv";
 
@@ -46,10 +47,29 @@ export class BusinessRepository {
         business.address = newBusiness.address || business.address;
         business.averageRating = newBusiness.averageRating || business.averageRating;
         business.reservationDepositPercentage = newBusiness.reservationDepositPercentage || business.reservationDepositPercentage;
-        business.openingAt = newBusiness.openingAt || business.openingAt;
-        business.closingAt = newBusiness.closingAt || business.closingAt;
+        business.schedule = newBusiness.schedule || business.schedule;
         
         await em.flush();
         return business;
+    }
+
+    /**
+     * Recalcula el averageRating de un negocio a partir del promedio
+     * del rating de todas sus canchas.
+     */
+    public async updateAverageRating(businessId: number): Promise<void> {
+        const em = orm.em.fork();
+
+        // Calcular promedio de ratings de canchas del negocio
+        const pitches = await em.find(Pitch, { business: businessId });
+
+        const avgRating = pitches.length > 0
+            ? pitches.reduce((sum, p) => sum + (p.rating ?? 0), 0) / pitches.length
+            : 0;
+
+        // Actualizar Business.averageRating
+        const business = await em.findOneOrFail(Business, { id: businessId });
+        business.averageRating = Math.round(avgRating * 100) / 100;
+        await em.flush();
     }
 }

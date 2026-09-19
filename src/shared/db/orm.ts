@@ -24,7 +24,7 @@ const config: Options = clientUrl
       entitiesTs: ['src/**/*.entities.ts'],
       debug,
       driverOptions: {
-        timezone: '-03:00'
+        timezone: process.env.TZ || 'America/Argentina/Buenos_Aires'
       }
     }
   : {
@@ -38,7 +38,7 @@ const config: Options = clientUrl
       entitiesTs: ['src/**/*.entities.ts'],
       debug,
       driverOptions: {
-        timezone: '-03:00'
+        timezone: process.env.TZ || 'America/Argentina/Buenos_Aires'
       }
     };
 

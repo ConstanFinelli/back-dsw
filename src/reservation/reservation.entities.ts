@@ -22,6 +22,9 @@ export class Reservation {
   @Property()
   status!: string;
 
+  @Property({ type: 'smallint', nullable: true })
+  pitchRating?: number;
+
   @Property({ onCreate: () => new Date() })
   createdAt!: Date;
 }

@@ -1,4 +1,5 @@
 import 'dotenv/config'; // forma correcta de importar en ES6 https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
+process.env.TZ = process.env.TZ || 'America/Argentina/Buenos_Aires';
 
 import express from 'express';
 import {couponRouter} from './coupon/coupon.route.js'

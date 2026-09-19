@@ -22,10 +22,11 @@ export const CouponSchema:Schema = {
         isDate: { errorMessage: 'expiringDate must be a valid date.' },
         custom: {
             options: (value) =>{
-                const date = new Date(value) // fecha en el json
-                const today = new Date() // fecha de hoy
+                const date = new Date(value + 'T00:00:00');
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
 
-                if(date <= today){
+                if(date < today){
                     throw new Error('expiringDate must be future')
                 }
                 return true

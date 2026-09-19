@@ -107,7 +107,7 @@ export class ReservationRepository {
 public async findOccupiedSlotsByPitch(id: number): Promise<{ ReservationDate: Date; ReservationTime: string }[]> {
     const em = orm.em.fork();
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0); // Timezone local, consistente con process.env.TZ
     
     return await em.find(Reservation, { 
         pitch: { id },

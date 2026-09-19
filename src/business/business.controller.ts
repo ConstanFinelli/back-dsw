@@ -1,6 +1,6 @@
 import { Schema } from "express-validator";
 import {BusinessRepository} from "./business.repository.js";
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import orm from "../shared/db/orm.js";
 import { User } from "../user/user.entities.js";
 import { Locality } from "../locality/locality.entities.js";
@@ -50,24 +50,14 @@ export const BusinessSchema:Schema = {
         errorMessage: 'reservationDepositPercentage must be a float number between 0.0 and 1.0'
     }
   },
-  openingAt: {
-    notEmpty: {errorMessage: 'Must specify openingAt hour'},
-    matches: {
-        options: [/^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/],
-        errorMessage: 'openingAt must be a valid HH:MM format (00:00 to 23:59)'
-    }
-  },
-  closingAt: {
-    notEmpty: {errorMessage: 'Must specify closingAt hour'},
-    matches: {
-        options: [/^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/],
-        errorMessage: 'closingAt must be a valid HH:MM format (00:00 to 23:59)'
-    }
-  },
+  // openingAt y closingAt eliminados — reemplazados por schedule
   owner: {
-    notEmpty: {errorMessage: 'Must specify an owner'},
+    optional: true,
     custom: {
         options: async(value) => {
+            if (value === undefined || value === null) {
+                return true; // Owner es opcional en updates
+            }
             const owner = await em.findOne(User, {id:value})
             if(!owner){
                 throw new Error('Could not find an owner')
@@ -253,6 +243,57 @@ async function activate(req: Request, res: Response) {
         res.status(500).send({ message: e instanceof Error ? e.message : String(e) });
     }
 }
+
+const TIME_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+export const validateSchedule = (req: Request, res: Response, next: NextFunction) => {
+    const { schedule } = req.body;
+
+    if (!schedule || !Array.isArray(schedule)) {
+        res.status(400).json({ message: 'Schedule must be an array' });
+        return;
+    }
+
+    if (schedule.length !== 7) {
+        res.status(400).json({ message: 'Schedule must have exactly 7 days' });
+        return;
+    }
+
+    const days = new Set<number>();
+    for (const item of schedule) {
+        if (!Number.isInteger(item.day) || item.day < 1 || item.day > 7) {
+            res.status(400).json({ message: 'Day must be between 1 and 7' });
+            return;
+        }
+
+        if (days.has(item.day)) {
+            res.status(400).json({ message: `Duplicate day: ${item.day}` });
+            return;
+        }
+        days.add(item.day);
+
+        const isOpen = item.open !== null && item.close !== null;
+        const isClosed = item.open === null && item.close === null;
+
+        if (!isOpen && !isClosed) {
+            res.status(400).json({ message: `Day ${item.day}: if open is null, close must also be null (and vice versa)` });
+            return;
+        }
+
+        if (isOpen) {
+            if (typeof item.open !== 'string' || !TIME_REGEX.test(item.open)) {
+                res.status(400).json({ message: `Invalid open time for day ${item.day}` });
+                return;
+            }
+            if (typeof item.close !== 'string' || !TIME_REGEX.test(item.close)) {
+                res.status(400).json({ message: `Invalid close time for day ${item.day}` });
+                return;
+            }
+        }
+    }
+
+    next();
+};
 
 export {
     findAll,
