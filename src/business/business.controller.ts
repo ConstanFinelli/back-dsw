@@ -246,6 +246,20 @@ async function activate(req: Request, res: Response) {
 
 const TIME_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
+// 1=Lunes ... 7=Domingo (mismo mapeo que el frontend)
+const DAY_NAMES: Record<number, string> = {
+    1: 'Monday',
+    2: 'Tuesday',
+    3: 'Wednesday',
+    4: 'Thursday',
+    5: 'Friday',
+    6: 'Saturday',
+    7: 'Sunday',
+};
+
+const dayLabel = (day: number): string =>
+    `Day ${day} (${DAY_NAMES[day] ?? 'unknown'})`;
+
 export const validateSchedule = (req: Request, res: Response, next: NextFunction) => {
     const { schedule } = req.body;
 
@@ -255,38 +269,49 @@ export const validateSchedule = (req: Request, res: Response, next: NextFunction
     }
 
     if (schedule.length !== 7) {
-        res.status(400).json({ message: 'Schedule must have exactly 7 days' });
+        res.status(400).json({ message: `Schedule must have exactly 7 days (received ${schedule.length})` });
         return;
     }
 
     const days = new Set<number>();
     for (const item of schedule) {
         if (!Number.isInteger(item.day) || item.day < 1 || item.day > 7) {
-            res.status(400).json({ message: 'Day must be between 1 and 7' });
+            res.status(400).json({ message: `Invalid day value: ${item.day}. Day must be an integer between 1 and 7` });
             return;
         }
 
         if (days.has(item.day)) {
-            res.status(400).json({ message: `Duplicate day: ${item.day}` });
+            res.status(400).json({ message: `Duplicate day: ${dayLabel(item.day)}` });
             return;
         }
         days.add(item.day);
 
-        const isOpen = item.open !== null && item.close !== null;
-        const isClosed = item.open === null && item.close === null;
+        const openIsNull = item.open === null || item.open === undefined;
+        const closeIsNull = item.close === null || item.close === undefined;
+        const isOpen = !openIsNull && !closeIsNull;
+        const isClosed = openIsNull && closeIsNull;
 
         if (!isOpen && !isClosed) {
-            res.status(400).json({ message: `Day ${item.day}: if open is null, close must also be null (and vice versa)` });
+            const missing = openIsNull ? 'close' : 'open';
+            res.status(400).json({
+                message: `${dayLabel(item.day)}: if ${missing === 'close' ? 'open is null' : 'close is null'}, ${missing} must also be null`
+            });
             return;
         }
 
         if (isOpen) {
             if (typeof item.open !== 'string' || !TIME_REGEX.test(item.open)) {
-                res.status(400).json({ message: `Invalid open time for day ${item.day}` });
+                res.status(400).json({ message: `${dayLabel(item.day)}: invalid open time "${item.open}" (expected HH:MM)` });
                 return;
             }
             if (typeof item.close !== 'string' || !TIME_REGEX.test(item.close)) {
-                res.status(400).json({ message: `Invalid close time for day ${item.day}` });
+                res.status(400).json({ message: `${dayLabel(item.day)}: invalid close time "${item.close}" (expected HH:MM)` });
+                return;
+            }
+            if (item.open === item.close) {
+                res.status(400).json({
+                    message: `${dayLabel(item.day)}: open and close times must be different (got ${item.open})`
+                });
                 return;
             }
         }
