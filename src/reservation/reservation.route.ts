@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { findAll, findAllFromUser, findOne, add, remove, update, findByBusiness, findOccupiedSlotsByPitch, ReservationSchema, cancel, rate, validateDateTime } from "./reservation.controller.js";
+import { findAll, findAllFromUser, findOne, add, remove, update, findByBusiness, findOccupiedSlotsByPitch, ReservationSchema, cancel, rate, validateDateTime, triggerRemindersManually, sendTestReminder } from "./reservation.controller.js";
 import { authenticateWithCategories } from "../middlewares/auth.middleware.js";
 import { verifyReservationOwnership } from "../middlewares/auth.RolValidation.js";
 import { Roles } from "../constants/roles.js";
@@ -31,3 +31,7 @@ reservationRouter.delete("/remove/:id", authenticateWithCategories([Roles.ADMIN,
 reservationRouter.get("/findByBusiness/:businessId", authenticateWithCategories([Roles.ADMIN, Roles.OWNER]), findByBusiness); 
 
 reservationRouter.get("/findOccupiedSlotsByPitch/:pitchId", authenticateWithCategories([Roles.ADMIN, Roles.OWNER, Roles.USER]), findOccupiedSlotsByPitch);
+
+reservationRouter.post("/trigger-reminders", authenticateWithCategories([Roles.ADMIN]), triggerRemindersManually);
+
+reservationRouter.post("/test-reminder/:id", authenticateWithCategories([Roles.ADMIN, Roles.OWNER]), sendTestReminder);

@@ -25,6 +25,9 @@ export class Reservation {
   @Property({ type: 'smallint', nullable: true })
   pitchRating?: number;
 
+  @Property({ nullable: true })
+  reminderSentAt?: Date;
+
   @Property({ onCreate: () => new Date() })
   createdAt!: Date;
 }

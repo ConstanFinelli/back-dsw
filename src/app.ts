@@ -18,6 +18,7 @@ import { RequestContext } from '@mikro-orm/core';
 import {SchemaGenerator} from '@mikro-orm/mysql';
 import { authenticateWithCategories } from './middlewares/auth.middleware.js';
 import { DatabaseSeeder } from './shared/seed/seed.js';
+import { initReminderJob } from './jobs/reminderJob.js';
 
 const app = express();
 app.use(express.json())
@@ -67,6 +68,7 @@ async function start() {
     app.listen(3000, () => {
       console.log('Server is running on port 3000');
       console.log('Base de datos sincronizada y lista');
+      initReminderJob();
     });
     
   } catch (error) {

@@ -7,6 +7,8 @@ import { Pitch } from "../pitch/pitch.entities.js";
 import { PitchRepository } from "../pitch/pitch.repository.js";
 import { BusinessRepository } from "../business/business.repository.js";
 import { Schema } from "express-validator";
+import { checkAndSendReminders } from "../jobs/reminderJob.js";
+import { mailService } from "../services/mailService.js";
 
 const repository = new ReservationRepository();
 
@@ -335,6 +337,40 @@ export async function rate(req: Request, res: Response) {
     }
 }
 
+async function triggerRemindersManually(req: Request, res: Response) {
+  try {
+    const result = await checkAndSendReminders();
+    res.status(200).json({ message: "Recordatorios procesados con éxito", result });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+async function sendTestReminder(req: Request, res: Response) {
+  try {
+    const reservationId = Number(req.params.id);
+    const em = orm.em.fork();
+    const reservation = await em.findOne(
+      Reservation,
+      { id: reservationId },
+      { populate: ['user', 'pitch.business'] }
+    );
+
+    if (!reservation) {
+      res.status(404).json({ message: 'Reservation not found' });
+      return;
+    }
+
+    const result = await mailService.sendReservationReminder(reservation);
+    res.status(200).json({
+      message: `Recordatorio de prueba enviado a ${reservation.user.email}`,
+      result,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
 export {
   findAll,
   findAllFromUser,
@@ -344,5 +380,8 @@ export {
   add,
   remove,
   update,
-  cancel
+  cancel,
+  triggerRemindersManually,
+  sendTestReminder
 };
+
