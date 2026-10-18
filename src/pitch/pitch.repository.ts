@@ -2,6 +2,7 @@ import {Pitch} from './pitch.entities.js'
 import orm from '../shared/db/orm.js';
 import { FilterQuery } from '@mikro-orm/core';
 import { Reservation } from '../reservation/reservation.entities.js';
+import { stripAccents } from '../shared/utils/text.js';
 
 export class PitchRepository {
     public async findAll():Promise<Pitch[] | undefined>{
@@ -111,7 +112,11 @@ export class PitchRepository {
         }
 
         if (filters.q) {
-            const q = String(filters.q);
+            // Normalizar solo el input del usuario (quitar acentos).
+            // Limitación: si el dato en DB tiene acentos (ej. "césped"), una búsqueda
+            // sin acentos ("cesped") NO matcheará. Los datos deben guardarse sin acentos
+            // para que la búsqueda funcione en ambos sentidos.
+            const q = stripAccents(String(filters.q));
             where.$or = [
                 { size: { $like: `%${q}%` } },
                 { groundType: { $like: `%${q}%` } },
@@ -204,7 +209,10 @@ export class PitchRepository {
 
         // q -> OR sobre size, groundType, business.businessName
         if (filters.q) {
-            const q = String(filters.q);
+            // Normalizar solo el input del usuario (quitar acentos).
+            // Misma limitación que en findFiltered: datos con acentos en DB no
+            // matchearán búsquedas sin acentos.
+            const q = stripAccents(String(filters.q));
             searchConditions.push({
                 $or: [
                     { size: { $like: `%${q}%` } },
