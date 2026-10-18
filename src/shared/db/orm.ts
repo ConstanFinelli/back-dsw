@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import { Options, MikroORM } from '@mikro-orm/core';
-import { MySqlDriver } from '@mikro-orm/mysql';
+import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 
 const clientUrl = process.env.DB_CLIENT_URL;
 const dbName = process.env.DB_NAME;
@@ -16,19 +16,25 @@ if (!clientUrl && !dbName) {
   throw new Error('No database specified. Please set DB_CLIENT_URL or DB_NAME in your environment.');
 }
 
+// TEMPORAL: Plan 2 refactorizará el manejo de fechas a UTC explícito.
+// El fix de timezone aquí es obligatorio porque pg ignora silenciosamente
+// la opción driverOptions.timezone (a diferencia de mysql2).
 const config: Options = clientUrl
   ? {
-      driver: MySqlDriver,
+      driver: PostgreSqlDriver,
       clientUrl,
       entities: ['dist/**/*.entities.js'],
       entitiesTs: ['src/**/*.entities.ts'],
       debug,
       driverOptions: {
-        timezone: process.env.TZ || 'America/Argentina/Buenos_Aires'
+        ssl: process.env.DB_SSL === 'true'
+          ? { rejectUnauthorized: true }
+          : undefined,
+        options: `-c timezone=${process.env.TZ || 'America/Argentina/Buenos_Aires'}`,
       }
     }
   : {
-      driver: MySqlDriver,
+      driver: PostgreSqlDriver,
       dbName: dbName!,
       user,
       password,
@@ -38,7 +44,10 @@ const config: Options = clientUrl
       entitiesTs: ['src/**/*.entities.ts'],
       debug,
       driverOptions: {
-        timezone: process.env.TZ || 'America/Argentina/Buenos_Aires'
+        ssl: process.env.DB_SSL === 'true'
+          ? { rejectUnauthorized: true }
+          : undefined,
+        options: `-c timezone=${process.env.TZ || 'America/Argentina/Buenos_Aires'}`,
       }
     };
 
