@@ -4,8 +4,8 @@ Repositorio donde se encuentra todo el contenido de back-end del TP para desarro
 ## 🚀 Inicio Rápido
 
 ### Requisitos Previos
-- Node.js (v14 o superior)
-- MySQL (v5.7 o superior)
+- Node.js (v18 o superior)
+- PostgreSQL (v16 o superior) — local (Docker Compose) o serverless (Neon)
 - Cuenta de Cloudinary (para manejo de imágenes)
 
 ### Instalación
@@ -23,15 +23,15 @@ npm install
 
 3. **Configurar variables de entorno**
 
-Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
+Usá el archivo [.env.example](./.env.example) como plantilla: copialo a `.env` y ajustá los valores según el preset que elijas:
 
 ```env
-# Database (MySQL)
-DB_NAME=backdsw
-DB_USER=root
-DB_PASSWORD=tu_password
-DB_HOST=localhost
-DB_PORT=3306
+# Timezone
+TZ=America/Argentina/Buenos_Aires
+
+# Database (PostgreSQL) — ver sección "Base de Datos" para los presets
+DB_CLIENT_URL=postgresql://dsw-user-back:backdsw-backend@localhost:5432/backdsw
+DB_SSL=false
 DB_DEBUG=false
 
 # JWT Configuration
@@ -41,6 +41,14 @@ JWT_SECRET=tu_secreto_jwt_aqui
 CLOUDINARY_CLOUD_NAME=tu_cloud_name
 CLOUDINARY_API_KEY=tu_api_key
 CLOUDINARY_API_SECRET=tu_api_secret
+
+# SMTP (envío de mails)
+SMTP_HOST=tu_host_smtp
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=tu_usuario_smtp
+SMTP_PASS=tu_password_smtp
+MAIL_FROM=no-reply@example.com
 ```
 
 4. **Compilar TypeScript**
@@ -80,7 +88,8 @@ back-dsw-4/
 │   ├── services/          # Servicios (Cloudinary)
 │   ├── shared/            # Configuración compartida
 │   │   ├── db/            # Configuración de base de datos
-│   │   └── seed/          # Seeding inicial
+│   │   ├── seed/          # Seeding inicial
+│   │   └── utils/         # Utilidades compartidas (ej. stripAccents)
 │   └── app.ts             # Punto de entrada
 ├── requestFiles/          # Archivos de prueba de API
 │   └── pitch/             # 🏟️ Pruebas de canchas
@@ -192,7 +201,52 @@ Authorization: Bearer YOUR_JWT_TOKEN
 
 ## 🗄️ Base de Datos
 
-El proyecto usa MikroORM con MySQL. Las tablas se crean automáticamente al iniciar el servidor.
+El proyecto usa MikroORM con **PostgreSQL**. Las tablas se crean automáticamente al iniciar el servidor.
+
+Hay dos formas de conectarse, definidas por las variables `DB_CLIENT_URL` y `DB_SSL` en `.env`. Usá [.env.example](./.env.example) como plantilla.
+
+### Preset A: PostgreSQL local (Docker Compose)
+
+Levantá un PostgreSQL 16 con Docker Compose desde la raíz del repositorio (el servicio debe exponer el puerto `5432` con la base `backdsw`, usuario `dsw-user-back` y password `backdsw-backend` para coincidir con el preset):
+
+```yaml
+services:
+  postgres:
+    image: postgres:16
+    container_name: dsw-postgres
+    environment:
+      POSTGRES_DB: backdsw
+      POSTGRES_USER: dsw-user-back
+      POSTGRES_PASSWORD: backdsw-backend
+      TZ: ${TZ:-America/Argentina/Buenos_Aires}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+```
+
+Y en `.env` dejá descomentado el preset A:
+
+```env
+DB_CLIENT_URL=postgresql://dsw-user-back:backdsw-backend@localhost:5432/backdsw
+DB_SSL=false
+```
+
+### Preset B: Neon (PostgreSQL serverless)
+
+[Neon](https://neon.tech) ofrece PostgreSQL serverless con un plan gratuito. Creá una cuenta, generá un proyecto y copiá el connection string. En `.env` usá el preset B (descomentado):
+
+```env
+DB_CLIENT_URL=postgresql://usuario:password@ep-xxx.region.aws.neon.tech/backdsw?sslmode=require
+DB_SSL=true
+```
+
+> **Nota:** `DB_SSL` debe ser `true` cuando el servidor (Neon) requiere SSL, y `false` para el Postgres local por defecto.
 
 ### Entidades Principales
 - **User**: Usuarios del sistema
@@ -208,7 +262,7 @@ El proyecto usa MikroORM con MySQL. Las tablas se crean automáticamente al inic
 - **Express**: Framework web
 - **TypeScript**: Lenguaje de programación
 - **MikroORM**: ORM para base de datos
-- **MySQL**: Base de datos
+- **PostgreSQL**: Base de datos (local vía Docker Compose o serverless vía [Neon](https://neon.tech))
 - **JWT**: Autenticación
 - **Cloudinary**: Almacenamiento de imágenes
 - **Multer**: Manejo de archivos
