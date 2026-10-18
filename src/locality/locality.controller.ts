@@ -26,10 +26,12 @@ export const LocalitySchema:Schema = {
   },
   postal_code: {
         notEmpty: {errorMessage: 'Must specify a postalCode.'},
-        isInt: {
-            options: {min:0},
-            errorMessage: 'Postal code must be a positive integer number'
+        isString: {
+            errorMessage: 'Postal code must be a string'
         },
+        isAlphanumeric: {
+            errorMessage: 'Postal code must be alphanumeric'
+        }
   },
 }
 
