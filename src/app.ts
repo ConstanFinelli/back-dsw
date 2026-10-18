@@ -15,7 +15,6 @@ import cors from "cors";
 
 import orm from './shared/db/orm.js';
 import { RequestContext } from '@mikro-orm/core';
-import {SchemaGenerator} from '@mikro-orm/mysql';
 import { authenticateWithCategories } from './middlewares/auth.middleware.js';
 import { DatabaseSeeder } from './shared/seed/seed.js';
 import { initReminderJob } from './jobs/reminderJob.js';
