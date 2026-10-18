@@ -278,6 +278,7 @@ npm run start:dev    # Iniciar en modo desarrollo con watch
 ## 📝 Notas Importantes
 
 1. **Seeding Automático**: Al iniciar por primera vez, se crean automáticamente:
+   - Extensión `unaccent` de PostgreSQL (requerida para la búsqueda de canchas insensible a acentos: "futbol" encuentra "Fútbol Premium"). El seed la instala sola, no requiere pasos manuales.
    - 3 categorías de usuarios (user, business_owner, admin)
    - 1 usuario administrador
 
