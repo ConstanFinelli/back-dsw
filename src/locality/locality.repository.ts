@@ -1,5 +1,4 @@
 import {Locality} from './locality.entities.js';
-import { pool } from '../shared/db/dbConnection.js';
 import orm from '../shared/db/orm.js';
 
 const em = orm.em
