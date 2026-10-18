@@ -9,7 +9,7 @@ export class Locality {
   name!: string;
 
   @Property()
-  postal_code!: number;
+  postal_code!: string;
 
   @Property()
   province!: string;
