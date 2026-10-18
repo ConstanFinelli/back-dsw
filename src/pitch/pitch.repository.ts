@@ -99,9 +99,9 @@ export class PitchRepository {
 
         // ── QueryBuilder (reemplaza em.findAndCount) ─────────────────────────
         // leftJoinAndSelect hidrata business en cada Pitch (equivalente a populate).
+        // NO usar .select('*'): sobreescribe el select y rompe la hidratación del join.
         const qb = em.createQueryBuilder(Pitch, 'p')
-            .leftJoinAndSelect('p.business', 'b')
-            .select('*');
+            .leftJoinAndSelect('p.business', 'b');
 
         if (filters.size) qb.andWhere({ 'p.size': String(filters.size) });
         if (filters.groundType) qb.andWhere({ 'p.groundType': String(filters.groundType) });
@@ -200,9 +200,9 @@ export class PitchRepository {
 
         // ── QueryBuilder (reemplaza em.findAndCount) ─────────────────────────
         // leftJoinAndSelect hidrata business en cada Pitch (equivalente a populate).
+        // NO usar .select('*'): sobreescribe el select y rompe la hidratación del join.
         const qb = em.createQueryBuilder(Pitch, 'p')
-            .leftJoinAndSelect('p.business', 'b')
-            .select('*');
+            .leftJoinAndSelect('p.business', 'b');
 
         // Base business activo (y si se pasa businessId, hacer match por id además)
         qb.andWhere({ 'b.active': true });
