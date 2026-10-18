@@ -1,8 +1,7 @@
 import {Pitch} from './pitch.entities.js'
 import orm from '../shared/db/orm.js';
-import { FilterQuery } from '@mikro-orm/core';
 import { Reservation } from '../reservation/reservation.entities.js';
-import { stripAccents } from '../shared/utils/text.js';
+import type { SqlEntityManager } from '@mikro-orm/postgresql';
 
 export class PitchRepository {
     public async findAll():Promise<Pitch[] | undefined>{
@@ -65,15 +64,9 @@ export class PitchRepository {
      * Soporta: q, size, groundType, roof, priceMin, priceMax, ratingMin, businessId, page, limit, sort
      */
     public async findFiltered(filters: any): Promise<{ data: Pitch[]; total: number }>{
-        const em = orm.em.fork();
-        const where: any = {};
-
-        if (filters.size) where.size = String(filters.size);
-        if (filters.groundType) where.groundType = String(filters.groundType);
-        if (filters.roof !== undefined) {
-            const roofVal = filters.roof === true || filters.roof === 'true' || filters.roof === '1' || filters.roof === 1;
-            where.roof = roofVal;
-        }
+        // SqlEntityManager: el driver real es PostgreSqlDriver (runtime), pero Options
+        // del core tipa em como EntityManager genérico que no expone createQueryBuilder.
+        const em = orm.em.fork() as SqlEntityManager;
 
         // Normalizar y sanear rangos de precio (acepta priceMin/priceMax y alias comunes)
         const rawMinAll = filters.priceMin ?? filters.minPrice ?? filters.price_from ?? undefined;
@@ -98,42 +91,48 @@ export class PitchRepository {
                 minAll = undefined;
                 maxAll = undefined;
             }
-            where.price = {} as any;
-            if (minAll !== undefined) where.price.$gte = minAll;
-            if (maxAll !== undefined) where.price.$lte = maxAll;
-        }
-
-        if (filters.ratingMin !== undefined) {
-            where.rating = { $gte: Number(filters.ratingMin) };
-        }
-
-        if (filters.businessId !== undefined) {
-            where.business = Number(filters.businessId) as any;
-        }
-
-        if (filters.q) {
-            // Normalizar solo el input del usuario (quitar acentos).
-            // Limitación: si el dato en DB tiene acentos (ej. "césped"), una búsqueda
-            // sin acentos ("cesped") NO matcheará. Los datos deben guardarse sin acentos
-            // para que la búsqueda funcione en ambos sentidos.
-            const q = stripAccents(String(filters.q));
-            where.$or = [
-                { size: { $ilike: `%${q}%` } },
-                { groundType: { $ilike: `%${q}%` } },
-                { business: { businessName: { $ilike: `%${q}%` } } },
-            ];
         }
 
         const page = Math.max(1, Number(filters.page) || 1);
         const limit = Math.min(Number(filters.limit) || 20, 100);
         const offset = (page - 1) * limit;
 
-        const order: any = {};
-        if (filters.sort === 'price_asc') order.price = 'ASC';
-        else if (filters.sort === 'price_desc') order.price = 'DESC';
+        // ── QueryBuilder (reemplaza em.findAndCount) ─────────────────────────
+        // leftJoinAndSelect hidrata business en cada Pitch (equivalente a populate).
+        const qb = em.createQueryBuilder(Pitch, 'p')
+            .leftJoinAndSelect('p.business', 'b')
+            .select('*');
 
-        console.log('PitchRepository.findFiltered where:', JSON.stringify(where));
-        const [data, total] = await em.findAndCount(Pitch, where, { populate: ['business'], limit, offset, orderBy: order });
+        if (filters.size) qb.andWhere({ 'p.size': String(filters.size) });
+        if (filters.groundType) qb.andWhere({ 'p.groundType': String(filters.groundType) });
+        if (filters.roof !== undefined) {
+            const roofVal = filters.roof === true || filters.roof === 'true' || filters.roof === '1' || filters.roof === 1;
+            qb.andWhere({ 'p.roof': roofVal });
+        }
+        if (minAll !== undefined) qb.andWhere({ 'p.price': { $gte: minAll } });
+        if (maxAll !== undefined) qb.andWhere({ 'p.price': { $lte: maxAll } });
+        if (filters.ratingMin !== undefined) qb.andWhere({ 'p.rating': { $gte: Number(filters.ratingMin) } });
+        if (filters.businessId !== undefined) qb.andWhere({ 'b.id': Number(filters.businessId) });
+        if (filters.q) {
+            // Plan 1b: búsqueda insensible a acentos vía extensión unaccent de PostgreSQL.
+            // Se compara unaccent(col) ILIKE unaccent(patrón) en ambos lados, por lo que
+            // el input del usuario NO necesita normalización y los datos en DB se
+            // conservan con acentos (UX preservada). Requiere CREATE EXTENSION unaccent
+            // (lo instala el seed inicial). El SQL crudo va acotado al OR de búsqueda;
+            // el resto de filtros y el mapeo a entidades siguen vía ORM.
+            const q = `%${String(filters.q)}%`;
+            qb.andWhere(
+                'unaccent(p.size) ILIKE unaccent(?) OR unaccent(p.ground_type) ILIKE unaccent(?) OR unaccent(b.business_name) ILIKE unaccent(?)',
+                [q, q, q]
+            );
+        }
+
+        if (filters.sort === 'price_asc') qb.orderBy({ 'p.price': 'ASC' });
+        else if (filters.sort === 'price_desc') qb.orderBy({ 'p.price': 'DESC' });
+        qb.limit(limit).offset(offset);
+
+        console.log('PitchRepository.findFiltered q:', filters.q ?? '(sin búsqueda)');
+        const [data, total] = await qb.getResultAndCount();
         return { data: data as Pitch[], total };
     }
     
@@ -167,16 +166,8 @@ export class PitchRepository {
      * Similar a `findFiltered` pero fuerza `business.active = true`.
      */
     public async findFilteredActive(filters: any): Promise<{ data: Pitch[]; total: number }>{
-        const em = orm.em.fork();
-        // Construir condiciones de búsqueda (excluyendo business que lo tratamos aparte)
-        const searchConditions: any[] = [];
-
-        if (filters.size) searchConditions.push({ size: String(filters.size) });
-        if (filters.groundType) searchConditions.push({ groundType: String(filters.groundType) });
-        if (filters.roof !== undefined) {
-            const roofVal = filters.roof === true || filters.roof === 'true' || filters.roof === '1' || filters.roof === 1;
-            searchConditions.push({ roof: roofVal });
-        }
+        // SqlEntityManager: ver comentario en findFiltered.
+        const em = orm.em.fork() as SqlEntityManager;
 
         // Normalizar y sanear rangos de precio (acepta priceMin/priceMax y alias comunes)
         const rawMin = filters.priceMin ?? filters.minPrice ?? filters.price_from ?? undefined;
@@ -197,57 +188,57 @@ export class PitchRepository {
                 const tmp = min; min = max; max = tmp; // swap si vienen al revés
             }
             // Si ambos son 0 -> interpretar como "sin filtro" (ignorarlos)
-            if (!(min !== undefined && max !== undefined && min === 0 && max === 0)) {
-                const priceCond: any = {};
-                if (min !== undefined) priceCond.$gte = min;
-                if (max !== undefined) priceCond.$lte = max;
-                searchConditions.push({ price: priceCond });
+            if (min !== undefined && max !== undefined && min === 0 && max === 0) {
+                min = undefined;
+                max = undefined;
             }
-        }
-
-        if (filters.ratingMin !== undefined) searchConditions.push({ rating: { $gte: Number(filters.ratingMin) } });
-
-        // q -> OR sobre size, groundType, business.businessName
-        if (filters.q) {
-            // Normalizar solo el input del usuario (quitar acentos).
-            // Misma limitación que en findFiltered: datos con acentos en DB no
-            // matchearán búsquedas sin acentos.
-            const q = stripAccents(String(filters.q));
-            searchConditions.push({
-                $or: [
-                    { size: { $ilike: `%${q}%` } },
-                    { groundType: { $ilike: `%${q}%` } },
-                    { business: { businessName: { $ilike: `%${q}%` } } },
-                ]
-            });
-        }
-
-        console.log('PitchRepository.findFilteredActive searchConditions:', JSON.stringify(searchConditions));
-
-        // Base business activo (y si se pasa businessId, hacer match por id además)
-        const businessBase: any = {};
-        if (filters.businessId !== undefined) businessBase.id = Number(filters.businessId);
-        businessBase.active = true;
-
-        // Combinar condiciones
-        let where: any = {};
-        if (searchConditions.length === 0) {
-            where = { business: businessBase };
-        } else {
-            where = { $and: [ { business: businessBase }, ...searchConditions ] };
         }
 
         const page = Math.max(1, Number(filters.page) || 1);
         const limit = Math.min(Number(filters.limit) || 20, 100);
         const offset = (page - 1) * limit;
 
-        const order: any = {};
-        if (filters.sort === 'price_asc') order.price = 'ASC';
-        else if (filters.sort === 'price_desc') order.price = 'DESC';
+        // ── QueryBuilder (reemplaza em.findAndCount) ─────────────────────────
+        // leftJoinAndSelect hidrata business en cada Pitch (equivalente a populate).
+        const qb = em.createQueryBuilder(Pitch, 'p')
+            .leftJoinAndSelect('p.business', 'b')
+            .select('*');
 
-        // Log para depuración: ver condiciones enviadas al ORM
-        console.log('PitchRepository.findFilteredActive where:', JSON.stringify(where));
-        const [data, total] = await em.findAndCount(Pitch, where, { populate: ['business'], limit, offset, orderBy: order });
+        // Base business activo (y si se pasa businessId, hacer match por id además)
+        qb.andWhere({ 'b.active': true });
+        if (filters.businessId !== undefined) qb.andWhere({ 'b.id': Number(filters.businessId) });
+
+        if (filters.size) qb.andWhere({ 'p.size': String(filters.size) });
+        if (filters.groundType) qb.andWhere({ 'p.groundType': String(filters.groundType) });
+        if (filters.roof !== undefined) {
+            const roofVal = filters.roof === true || filters.roof === 'true' || filters.roof === '1' || filters.roof === 1;
+            qb.andWhere({ 'p.roof': roofVal });
+        }
+        if (min !== undefined) qb.andWhere({ 'p.price': { $gte: min } });
+        if (max !== undefined) qb.andWhere({ 'p.price': { $lte: max } });
+        if (filters.ratingMin !== undefined) qb.andWhere({ 'p.rating': { $gte: Number(filters.ratingMin) } });
+
+        // q -> OR sobre size, groundType, business.businessName con unaccent.
+        // Plan 1b: búsqueda insensible a acentos vía extensión unaccent de PostgreSQL.
+        // Se compara unaccent(col) ILIKE unaccent(patrón) en ambos lados, por lo que
+        // el input del usuario NO necesita normalización y los datos en DB se
+        // conservan con acentos (UX preservada). Requiere CREATE EXTENSION unaccent
+        // (lo instala el seed inicial). El SQL crudo va acotado al OR de búsqueda;
+        // el resto de filtros y el mapeo a entidades siguen vía ORM.
+        if (filters.q) {
+            const q = `%${String(filters.q)}%`;
+            qb.andWhere(
+                'unaccent(p.size) ILIKE unaccent(?) OR unaccent(p.ground_type) ILIKE unaccent(?) OR unaccent(b.business_name) ILIKE unaccent(?)',
+                [q, q, q]
+            );
+        }
+
+        if (filters.sort === 'price_asc') qb.orderBy({ 'p.price': 'ASC' });
+        else if (filters.sort === 'price_desc') qb.orderBy({ 'p.price': 'DESC' });
+        qb.limit(limit).offset(offset);
+
+        console.log('PitchRepository.findFilteredActive q:', filters.q ?? '(sin búsqueda)');
+        const [data, total] = await qb.getResultAndCount();
         return { data: data as Pitch[], total };
     }
 }
