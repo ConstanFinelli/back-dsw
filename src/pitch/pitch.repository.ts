@@ -118,9 +118,9 @@ export class PitchRepository {
             // para que la búsqueda funcione en ambos sentidos.
             const q = stripAccents(String(filters.q));
             where.$or = [
-                { size: { $like: `%${q}%` } },
-                { groundType: { $like: `%${q}%` } },
-                { business: { businessName: { $like: `%${q}%` } } },
+                { size: { $ilike: `%${q}%` } },
+                { groundType: { $ilike: `%${q}%` } },
+                { business: { businessName: { $ilike: `%${q}%` } } },
             ];
         }
 
@@ -215,9 +215,9 @@ export class PitchRepository {
             const q = stripAccents(String(filters.q));
             searchConditions.push({
                 $or: [
-                    { size: { $like: `%${q}%` } },
-                    { groundType: { $like: `%${q}%` } },
-                    { business: { businessName: { $like: `%${q}%` } } },
+                    { size: { $ilike: `%${q}%` } },
+                    { groundType: { $ilike: `%${q}%` } },
+                    { business: { businessName: { $ilike: `%${q}%` } } },
                 ]
             });
         }
