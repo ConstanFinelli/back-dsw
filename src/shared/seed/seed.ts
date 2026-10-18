@@ -16,6 +16,11 @@ export class DatabaseSeeder {
     console.log('Iniciando seeding de la base de datos...');
 
     try {
+      // Plan 1b: instalar extensión unaccent de PostgreSQL.
+      // Debe ser lo PRIMERO: las queries de búsqueda de pitches usan unaccent()
+      // y fallarían si la extensión no existe. Idempotente (IF NOT EXISTS).
+      await em.getConnection().execute('CREATE EXTENSION IF NOT EXISTS unaccent;');
+
       // Verificar si ya existe algún usuario admin para evitar duplicados
       const existingAdmin = await em.findOne(User, { email: 'admin@sistema.com' });
       
