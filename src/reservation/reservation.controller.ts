@@ -7,6 +7,7 @@ import { Pitch } from "../pitch/pitch.entities.js";
 import { PitchRepository } from "../pitch/pitch.repository.js";
 import { BusinessRepository } from "../business/business.repository.js";
 import { Schema } from "express-validator";
+import { FilterQuery } from "@mikro-orm/core";
 import { checkAndSendReminders } from "../jobs/reminderJob.js";
 import { mailService } from "../services/mailService.js";
 
@@ -40,7 +41,19 @@ export const ReservationSchema:Schema = {
             throw new Error('Could not find a pitch to validate ReservationTime.');
           }
 
-        const reservation = await em.findOne(Reservation, { ReservationTime: value, ReservationDate: req.body.ReservationDate, pitch: pitchId, status: { $ne: 'cancelada' } });
+        // Al actualizar (PUT /update/:id) la propia reserva no debe bloquearse a sí misma
+        const reservationId = req.params?.id ? Number(req.params.id) : undefined;
+        const overlapFilter: FilterQuery<Reservation> = {
+          ReservationTime: value,
+          ReservationDate: req.body.ReservationDate,
+          pitch: pitchId,
+          status: { $ne: 'cancelada' },
+        };
+        if (reservationId && !Number.isNaN(reservationId)) {
+          overlapFilter.id = { $ne: reservationId };
+        }
+
+        const reservation = await em.findOne(Reservation, overlapFilter);
         if (reservation) {
           throw new Error('The selected time slot is already booked for this pitch.');
         }

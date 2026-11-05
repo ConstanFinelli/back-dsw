@@ -113,6 +113,35 @@ export async function verifyReservationOwnership(req: AuthenticatedRequest, res:
   }
 }
 
+/**
+ * Valida que el usuario autenticado cree reservas solo a su nombre (o que sea admin).
+ * Se usa en POST /add, donde el userId viene en req.body.user.
+ */
+export function validateReservationOwnership(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  if (!req.user) {
+    res.status(401).json({ message: 'Unauthenticated' });
+    return;
+  }
+
+  const userId = Number(req.body?.user);
+  if (!userId || Number.isNaN(userId)) {
+    res.status(400).json({ message: 'User id is required' });
+    return;
+  }
+
+  if (req.user.category === Roles.ADMIN) {
+    next();
+    return;
+  }
+
+  if (Number(req.user.id) !== userId) {
+    res.status(403).json({ message: 'Forbidden. Cannot create a reservation for another user' });
+    return;
+  }
+
+  next();
+}
+
 export async function verifyBusinessOwnership(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   if (!req.user) {
     res.status(401).json({ message: 'Unauthenticated' });
@@ -158,4 +187,5 @@ export default {
   verifyPitchOwnership,
   verifyReservationOwnership,
   verifyBusinessOwnership,
+  validateReservationOwnership,
 };

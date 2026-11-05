@@ -19,6 +19,17 @@ if (!clientUrl && !dbName) {
 // TEMPORAL: Plan 2 refactorizará el manejo de fechas a UTC explícito.
 // El fix de timezone aquí es obligatorio porque pg ignora silenciosamente
 // la opción driverOptions.timezone (a diferencia de mysql2).
+const timezone = process.env.TZ || 'America/Argentina/Buenos_Aires';
+
+// MikroORM 6 no expone `onConnect` (es API de v7). El hook equivalente soportado
+// por knex es `pool.afterCreate`, que corre en cada conexión nueva. Se ejecuta un
+// SET en lugar de mandar startup params (`-c timezone=...`), que PgBouncer rechaza.
+const pool: Options['pool'] = {
+  afterCreate: (conn: any, done: (err: Error | null, conn: any) => void) => {
+    conn.query(`SET timezone = '${timezone.replace(/'/g, "''")}'`, (err: Error | null) => done(err, conn));
+  },
+};
+
 const config: Options = clientUrl
   ? {
       driver: PostgreSqlDriver,
@@ -26,11 +37,15 @@ const config: Options = clientUrl
       entities: ['dist/**/*.entities.js'],
       entitiesTs: ['src/**/*.entities.ts'],
       debug,
+      pool,
       driverOptions: {
-        ssl: process.env.DB_SSL === 'true'
-          ? { rejectUnauthorized: true }
-          : undefined,
-        options: `-c timezone=${process.env.TZ || 'America/Argentina/Buenos_Aires'}`,
+        // MikroORM/knex solo aplican las opciones del driver dentro de `connection`.
+        // `ssl` a nivel raíz se ignora silenciosamente y Neon rechaza la conexión.
+        connection: {
+          ssl: process.env.DB_SSL === 'true'
+            ? { rejectUnauthorized: false }
+            : undefined,
+        },
       }
     }
   : {
@@ -43,11 +58,13 @@ const config: Options = clientUrl
       entities: ['dist/**/*.entities.js'],
       entitiesTs: ['src/**/*.entities.ts'],
       debug,
+      pool,
       driverOptions: {
-        ssl: process.env.DB_SSL === 'true'
-          ? { rejectUnauthorized: true }
-          : undefined,
-        options: `-c timezone=${process.env.TZ || 'America/Argentina/Buenos_Aires'}`,
+        connection: {
+          ssl: process.env.DB_SSL === 'true'
+            ? { rejectUnauthorized: false }
+            : undefined,
+        },
       }
     };
 

@@ -7,7 +7,7 @@ export class Reservation {
   @PrimaryKey()
   id!: number;
 
-  @Property()
+  @Property({ type: 'date' })
   ReservationDate!: Date;
 
   @Property()
