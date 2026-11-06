@@ -20,8 +20,38 @@ import { DatabaseSeeder } from './shared/seed/seed.js';
 import { initReminderJob } from './jobs/reminderJob.js';
 
 const app = express();
+
+const port = Number.parseInt(process.env.PORT ?? '', 10) || 3000;
+const corsOrigins = (process.env.CORS_ORIGIN ?? 'http://localhost:5173')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
 app.use(express.json())
-app.use(cors());
+app.use(cors({
+    origin: corsOrigins.includes('*') ? true : corsOrigins,
+}));
+
+// Health check: no requiere autenticación y verifica conectividad con la base de datos.
+app.get('/api/health', async (_req, res) => {
+    try {
+        await orm.em.getConnection().execute('select 1');
+        res.status(200).json({
+            status: 'ok',
+            database: 'up',
+            uptime: process.uptime(),
+            timestamp: new Date().toISOString(),
+        });
+    } catch (error) {
+        console.error('Health check falló:', error);
+        res.status(503).json({
+            status: 'error',
+            database: 'down',
+            timestamp: new Date().toISOString(),
+        });
+    }
+});
+
 app.use((req, res, next)=>{
     RequestContext.create(orm.em, next);
 })
@@ -37,25 +67,27 @@ app.use('/api/reservations', reservationRouter);
 app.use('/api/login', loginRouter); // Login SIN protección
 app.use('/api/user-coupons', userCouponRouter); // Gestión de cupones asignados a usuarios
 
-// se asegura de la base de datos este creada, actualizada y levanta el servidor
-
+// Deja la base de datos lista (migraciones o sincronización) y levanta el servidor.
 async function start() {
   try {
     console.log('Iniciando aplicación...');
 
-    const generator = orm.getSchemaGenerator();
-    
-    // Crear un EntityManager contextual para operaciones de seeding
+    const useMigrations =
+      process.env.NODE_ENV === 'production' || process.env.DB_USE_MIGRATIONS === 'true';
+
+    if (useMigrations) {
+      console.log('Aplicando migraciones de base de datos...');
+      await orm.getMigrator().up();
+    } else {
+      console.log('Sincronizando esquema de base de datos (modo desarrollo)...');
+      await orm.getSchemaGenerator().updateSchema();
+    }
+
+    // El EntityManager se crea después de preparar el esquema para evitar
+    // operaciones sobre tablas que todavía no existen.
     const em = orm.em.fork();
-    
-    // Verificar si necesitamos hacer seeding inicial antes de actualizar el esquema
     const needsSeeding = await DatabaseSeeder.needsInitialSeeding(em);
-    
-    console.log('Actualizando esquema de base de datos...');
-    await generator.updateSchema();
-    
-    // Si necesitaba seeding y acabamos de actualizar el esquema, 
-    // es muy probable que las tablas se hayan creado ahora
+
     if (needsSeeding) {
       console.log('Base de datos nueva detectada, ejecutando seeding inicial...');
       await DatabaseSeeder.seedInitialData(em);
@@ -63,13 +95,13 @@ async function start() {
       console.log('Base de datos ya tiene datos, saltando seeding inicial');
     }
 
-    // inicia el servidor 
-    app.listen(3000, () => {
-      console.log('Server is running on port 3000');
+    // inicia el servidor
+    app.listen(port, () => {
+      console.log(`Server is running on port ${port}`);
       console.log('Base de datos sincronizada y lista');
       initReminderJob();
     });
-    
+
   } catch (error) {
     console.error('Error al iniciar la aplicación:', error);
     process.exit(1);
@@ -79,4 +111,3 @@ async function start() {
 
 // Inicia la aplicación
 start();
-

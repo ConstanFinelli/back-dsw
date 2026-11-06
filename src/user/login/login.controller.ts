@@ -6,6 +6,7 @@ import { User } from '../user.entities.js'
 import bcrypt from "bcryptjs";
 import { add } from "../user.controller.js";
 import orm from "../../shared/db/orm.js";
+import { normalizeEmail } from "../../shared/utils/emailNormalizer.js";
 
 const repository = new UserRepository()
 const em = orm.em.fork()
@@ -17,7 +18,8 @@ export async function login(req:Request, res:Response){
     } // verifica campos vacios
 
     const toLog = new User();
-    toLog.email = req.body.email;
+    // Misma normalización conservadora que aplica el registro (emailNormalizer)
+    toLog.email = normalizeEmail(req.body.email);
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(req.body.password, saltRounds); // hashea la contraseña para comparar
     toLog.password = hashedPassword

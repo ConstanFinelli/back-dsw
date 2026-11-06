@@ -7,6 +7,7 @@ import { Business } from "../business/business.entities.js";
 import { orm } from "../shared/db/orm.js"
 import { Category } from "../category/category.entities.js";
 import { Schema } from "express-validator";
+import { normalizeEmail } from "../shared/utils/emailNormalizer.js";
 
 const userRepository = new UserRepository();
 const categoryRepository = new CategoryRepository();
@@ -27,7 +28,9 @@ export const UserSchema:Schema = {
     email:{
         isEmail:true,
         notEmpty:true,
-        normalizeEmail:true,
+        customSanitizer:{
+            options: (value: string) => normalizeEmail(value)
+        },
         errorMessage:'An email is required and must be valid',
         custom:   {
             options: async (value:string) => {
@@ -86,7 +89,9 @@ export const UserUpdateSchema: Schema = {
     email: {
         optional: true,
         isEmail: true,
-        normalizeEmail: true,
+        customSanitizer: {
+            options: (value: string) => normalizeEmail(value)
+        },
         errorMessage: 'Email must be valid',
         custom: {
             options: async (value: string, { req }: any) => {

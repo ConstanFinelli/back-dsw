@@ -201,9 +201,25 @@ Authorization: Bearer YOUR_JWT_TOKEN
 
 ## 🗄️ Base de Datos
 
-El proyecto usa MikroORM con **PostgreSQL**. Las tablas se crean automáticamente al iniciar el servidor.
+El proyecto usa MikroORM con **PostgreSQL**. En desarrollo las tablas se sincronizan automáticamente al iniciar (`updateSchema()`); en producción se aplican migraciones versionadas.
 
 Hay dos formas de conectarse, definidas por las variables `DB_CLIENT_URL` y `DB_SSL` en `.env`. Usá [.env.example](./.env.example) como plantilla.
+
+### Migraciones
+
+- Por defecto (`development`) el arranque sincroniza el esquema con las entidades.
+- Con `NODE_ENV=production` o `DB_USE_MIGRATIONS=true`, el arranque aplica las migraciones pendientes desde `src/migrations` (compiladas a `dist/migrations`).
+
+```bash
+npm run build               # compila también las migraciones a dist/
+npm run migration:create    # crea una migración por diferencias entidades vs DB
+npm run migration:up        # aplica migraciones pendientes
+npm run migration:down      # revierte la última migración
+npm run migration:list      # lista migraciones y su estado
+```
+
+> Para una base existente creada con `updateSchema()` hay que generar una línea base o recrearla antes de activar migraciones, ya que la migración inicial intenta crear las tablas.
+
 
 ### Preset A: PostgreSQL local (Docker Compose)
 
@@ -272,8 +288,27 @@ DB_SSL=true
 
 ```bash
 npm run build        # Compilar TypeScript
+npm run start        # Iniciar el build compilado (dist/app.js)
 npm run start:dev    # Iniciar en modo desarrollo con watch
+npm run migration:create  # Generar migración desde las entidades
+npm run migration:up      # Aplicar migraciones pendientes
+npm run migration:down    # Revertir la última migración
+npm run migration:list    # Listar migraciones
+npm run migration:pending # Listar migraciones pendientes
 ```
+
+### Variables de entorno relevantes
+
+- `PORT`: puerto HTTP (default `3000`).
+- `CORS_ORIGIN`: orígenes permitidos separados por coma (default `http://localhost:5173`). Usá `*` para permitir todos.
+- `DB_USE_MIGRATIONS`: `true` para aplicar migraciones en desarrollo (en producción se activa solo).
+- `DB_CLIENT_URL` o el grupo `DB_HOST`/`DB_PORT`/`DB_USER`/`DB_PASSWORD`/`DB_NAME`.
+- `DB_SSL`: `true` para Neon u otros servidores que exijan SSL.
+
+### Health check
+
+`GET /api/health` devuelve `200` con `{ status: "ok", database: "up" }` si la base responde, o `503` si no hay conectividad.
+
 
 ## 📝 Notas Importantes
 
